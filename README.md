@@ -11,7 +11,8 @@ This is a starter repository for the RealPlay Frontend Engineering technical ass
 We've set up the foundation so you can focus on building features:
 
 ✅ **Project Setup**
-- React 18 + TypeScript configured
+- React 19 + TypeScript + Vite configured
+- Tailwind CSS + ShadCN/UI component library installed
 - Basic folder structure (`components/`, `types/`, `data/`)
 - Dependencies ready (just run `npm install`)
 
@@ -69,10 +70,10 @@ git checkout -b feature/player-search-implementation
 ### 4. Run the Development Server
 
 ```bash
-npm start
+npm run dev
 ```
 
-The app will open at `http://localhost:3000` and you'll see placeholder text for the components you need to build.
+The app will open at `http://localhost:5173` and you'll see placeholder text for the components you need to build.
 
 ## 📝 Your Tasks
 
@@ -100,6 +101,7 @@ interface SearchBarProps {
 **Requirements:**
 - Display players in a table format
 - Show columns: Player ID, Name, Email, Balance, Status
+- The **Status** column comes from the `online: boolean` field on the `Player` type — display it as "Online" / "Offline"
 - Accept `players` array as prop
 - Style to look professional (match BO aesthetic if possible)
 
@@ -134,6 +136,18 @@ interface PaginationProps {
 - Replace the TODO placeholders with your components
 - Pass the correct props to each component
 - Test that search, display, and pagination all work together
+
+### UI Library
+
+**ShadCN/UI** is pre-installed and ready to use. Several components are already available in `src/components/ui/`:
+- `Button`, `Input`, `Card`, `Table`, `Badge`
+
+To add more components:
+```bash
+npx shadcn@latest add <component-name>
+```
+
+Browse all available components at [ui.shadcn.com/docs/components](https://ui.shadcn.com/docs/components).
 
 ### Bonus Features (If Time Permits)
 
@@ -194,7 +208,7 @@ Before you submit, make sure you have:
 
 - [ ] All three components implemented (SearchBar, PlayerTable, Pagination)
 - [ ] Components wired together in App.tsx
-- [ ] Application runs without errors (`npm start`)
+- [ ] Application runs without errors (`npm run dev`)
 - [ ] 5-10 meaningful git commits with descriptive messages
 - [ ] Your feature branch pushed to the repository
 - [ ] README updated with your notes (see below)
@@ -242,7 +256,7 @@ After you submit, we'll schedule a 15-minute walkthrough where you'll:
 
 If you have questions about:
 - **Requirements:** Ask for clarification before starting
-- **Technical setup issues:** Reach out if `npm install` or `npm start` fails  
+- **Technical setup issues:** Reach out if `npm install` or `npm run dev` fails  
 - **Submission process:** Contact us anytime
 
 We want you to succeed! Don't hesitate to ask.
