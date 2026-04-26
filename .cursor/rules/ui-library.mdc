@@ -1,0 +1,33 @@
+---
+description: UI library standards — use ShadCN/UI for all components
+globs: **/*.tsx
+alwaysApply: false
+---
+
+# UI Library: ShadCN/UI
+
+All UI components must be built using **ShadCN/UI**. Do not use other component libraries (MUI, Ant Design, Chakra, etc.).
+
+## Install a component
+
+```bash
+npx shadcn@latest add <component-name>
+```
+
+## Usage
+
+```tsx
+// ✅ GOOD — use ShadCN components
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+// ❌ BAD — do not import from other libraries
+import Button from "@mui/material/Button";
+```
+
+## Styling
+
+- Use **Tailwind CSS** utility classes for layout and spacing.
+- Customise ShadCN components via `className` props, not inline styles.
+- Do not install or use any other CSS-in-JS or component libraries.
