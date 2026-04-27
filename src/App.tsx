@@ -3,7 +3,7 @@ import { Sun, Moon } from 'lucide-react';
 import { searchPlayers, SearchResult } from '@/api/searchPlayers';
 // NOTE: The theme toggle button below uses a plain <button> until you add ShadCN.
 // Once you run `npx shadcn@latest add button` you can swap it for <Button>.
-// TODO: Uncomment these imports as you implement each component
+// TODO: Once you create your components, import them here:
 // import SearchBar from '@/components/SearchBar';
 // import PlayerTable from '@/components/PlayerTable';
 // import Pagination from '@/components/Pagination';
