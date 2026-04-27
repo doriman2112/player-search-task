@@ -1,37 +1,39 @@
-import React from 'react';
-
-/**
- * TODO: Implement SearchBar Component
- * 
- * Requirements:
- * - Text input that accepts player_id, email, or phone
- * - Placeholder text: "player_id, email, phone"
- * - "Go" button to trigger search
- * - Pass search query to parent via onSearch callback
- * 
- * Props interface:
- * interface SearchBarProps {
- *   onSearch: (query: string) => void;
- * }
- * 
- * Bonus features (optional):
- * - Handle Enter key to trigger search
- * - Validate input format
- * - Show which search type was detected
- * - Disable button when input is empty
- */
+import React, { useState, KeyboardEvent } from 'react';
+import { Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
+  initialValue?: string;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
-  // TODO: Implement component logic here
+const SearchBar: React.FC<SearchBarProps> = ({ onSearch, initialValue = '' }) => {
+  const [value, setValue] = useState(initialValue);
+
+  const handleSearch = () => {
+    onSearch(value.trim());
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleSearch();
+  };
 
   return (
-    <div>
-      <p>TODO: Implement SearchBar component</p>
-      {/* Add your implementation here */}
+    <div className="flex gap-2 w-full">
+      <div className="relative flex-1">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          className="pl-9"
+          placeholder="player_id, email, phone"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+        />
+      </div>
+      <Button onClick={handleSearch} disabled={!value.trim()}>
+        Go
+      </Button>
     </div>
   );
 };

@@ -1,49 +1,56 @@
-import React from 'react';
-
-/**
- * TODO: Implement Pagination Component
- * 
- * Requirements:
- * - Previous and Next buttons
- * - Show current page and total pages
- * - Trigger parent callbacks on button clicks
- * 
- * Props interface:
- * interface PaginationProps {
- *   currentPage: number;
- *   totalPages: number;
- *   onNext: () => void;
- *   onPrev: () => void;
- * }
- * 
- * Bonus features (optional):
- * - Disable Previous on first page
- * - Disable Next on last page
- * - Show page numbers (1, 2, 3...)
- * - Jump to specific page
- * - Show "Showing X-Y of Z results"
- */
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
+  totalResults: number;
+  pageSize: number;
   onNext: () => void;
   onPrev: () => void;
 }
 
-const Pagination: React.FC<PaginationProps> = ({ 
-  currentPage, 
-  totalPages, 
-  onNext, 
-  onPrev 
+const Pagination: React.FC<PaginationProps> = ({
+  currentPage,
+  totalPages,
+  totalResults,
+  pageSize,
+  onNext,
+  onPrev,
 }) => {
-  // TODO: Implement component logic here
+  const from = totalResults === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const to = Math.min(currentPage * pageSize, totalResults);
 
   return (
-    <div>
-      <p>TODO: Implement Pagination component</p>
-      <p>Page {currentPage} of {totalPages}</p>
-      {/* Add your implementation here */}
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+      <p className="text-sm text-muted-foreground">
+        {totalResults === 0
+          ? 'No results'
+          : `Showing ${from}–${to} of ${totalResults} results`}
+      </p>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onPrev}
+          disabled={currentPage <= 1}
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Previous
+        </Button>
+        <span className="text-sm text-muted-foreground px-2 whitespace-nowrap">
+          Page {currentPage} of {totalPages}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onNext}
+          disabled={currentPage >= totalPages}
+        >
+          Next
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 };
