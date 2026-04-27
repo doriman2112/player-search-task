@@ -128,65 +128,76 @@ These are not optional — they will be evaluated in the code review and walkthr
 ### TypeScript
 - Use TypeScript strictly throughout — no `any`, no type assertions unless genuinely necessary
 - Define explicit interfaces/types for all props, API responses, and state
-- Use union types and discriminated unions instead of booleans where they describe state better
-  ```typescript
-  // ❌ BAD
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<Player[]>([]);
-
-  // ✅ GOOD — one state variable, mutually exclusive states
-  type SearchState =
-    | { status: 'idle' }
-    | { status: 'loading' }
-    | { status: 'success'; players: Player[]; total: number }
-    | { status: 'error'; message: string };
-  ```
 
 ### Modern ES6+
-Write clean, modern JavaScript — avoid patterns from the pre-ES6 era:
-
-```typescript
-// ❌ Avoid
-var items = [];
-for (var i = 0; i < players.length; i++) { ... }
-function handleClick() { ... }
-
-// ✅ Use
-const items = players
-  .filter(({ online }) => online)
-  .map(({ playerId, name }) => ({ id: playerId, label: name }));
-
-const handleClick = () => { ... };
-```
-
-Required patterns:
-- `const`/`let` — never `var`
-- Arrow functions for callbacks and component definitions
-- Destructuring in function params, array/object assignments
-- Optional chaining (`?.`) and nullish coalescing (`??`) where appropriate
-- Template literals instead of string concatenation
-- Array methods (`map`, `filter`, `reduce`, `find`) over imperative loops
-- Async/await over `.then()` chains
-- Named exports for utilities; default export for components
+Write clean, modern JavaScript:
+- `const`/`let` only — never `var`
+- Arrow functions for callbacks and utilities
+- Destructuring in function params and assignments
+- Optional chaining `?.` and nullish coalescing `??` where appropriate
+- Template literals over string concatenation
+- `map`/`filter`/`find` over `for` loops
+- `async/await` over `.then()` chains
 
 ### Error Handling
-Every `async` call must be wrapped in try/catch. Errors must be surfaced to the user — never silently swallowed:
+Every `async` call must be wrapped in `try/catch`. Errors must be visible to the user — never silently swallowed. Think: *what does the user see if the server returns a 500?*
 
-```typescript
-// ❌ BAD
-const data = await searchPlayers(params);
-setPlayers(data.players);
+---
 
-// ✅ GOOD
-try {
-  const data = await searchPlayers(params);
-  setState({ status: 'success', ...data });
-} catch (err) {
-  const message = err instanceof Error ? err.message : 'Unexpected error';
-  setState({ status: 'error', message });
-}
-```
+## 🤔 Edge Cases to Think Through
+
+These are the problems most developers don't think about until something breaks in production. Read each one, understand the problem, then figure out how to solve it. You don't need to get them all perfect — but you need to be able to explain your approach in the walkthrough.
+
+---
+
+### 1. Typing too fast — the debounce problem
+
+**The problem:** Your search input calls the API. The user types `"john"` — that's 4 keystrokes, 4 API calls fired in under a second. Now imagine 50 users doing that simultaneously.
+
+**Think about it:**
+- How can you wait until the user *stops* typing before firing the request?
+- If you set a 500ms timer on every keystroke, what do you do with the *previous* timer when a new keystroke arrives?
+- What React concept lets you run code when a value changes *and* clean up the previous run?
+
+> 🔑 Keywords to search: **debounce**, **useEffect cleanup**, **clearTimeout**
+
+---
+
+### 2. Slow responses arriving out of order — the race condition
+
+**The problem:** The user types `"j"`, waits, then quickly types `"john"`. Two requests are now in flight. The `"j"` request is slower (bad luck, server load) and arrives *after* the `"john"` result. Your UI now shows results for `"j"` even though the user is looking at `"john"`.
+
+**Think about it:**
+- How do you know, when a response arrives, whether it's still the *latest* one?
+- Is there a browser API that lets you cancel an in-flight HTTP request?
+- Alternatively, could you track a counter or ID to discard stale responses?
+
+> 🔑 Keywords to search: **AbortController**, **stale closure React**, **ignore flag async useEffect**
+
+---
+
+### 3. Impossible UI states — the state modeling problem
+
+**The problem:** You have three pieces of state: `loading`, `error`, and `data`. But some combinations make no sense — you can't be loading *and* have an error at the same time, or have data *and* be in an error state. These impossible states lead to bugs like showing an empty table while an error banner is also displayed.
+
+**Think about it:**
+- Can you represent loading, error, and success as a *single* state variable instead of three?
+- How would TypeScript help you make sure you never render the table when the state is `'error'`?
+
+> 🔑 Keywords to search: **discriminated union TypeScript**, **making impossible states impossible**, **type-safe state React**
+
+---
+
+### 4. Rendering hundreds of rows — the performance problem
+
+**The problem:** The API returns 200 players. You render 200 `<tr>` elements in the DOM. A real back office might have 10,000. Each DOM node has a cost — layout, paint, memory. On low-end devices this causes visible lag.
+
+**Think about it:**
+- The user can only see ~10 rows at a time. Do you really need the other 190 in the DOM?
+- What if instead of rendering all rows, you only rendered the ones *visible in the scrollable area*, and swapped them out as the user scrolls?
+- How would you calculate which rows are visible based on scroll position and row height?
+
+> 🔑 Keywords to search: **list virtualization**, **windowing React**, **@tanstack/react-virtual useVirtualizer**
 
 ---
 
@@ -201,11 +212,8 @@ You need to implement these four things:
 **Requirements:**
 - Text input that accepts player ID, email, or name
 - Placeholder: `"player_id, email, phone"`
-- "Go" button to trigger search immediately
-- **Auto-search as the user types** — but do NOT fire a request on every keystroke. Implement **debouncing** so the API is called only after the user stops typing for ~500ms
-- Call `onSearch(query)` callback when the search triggers (either via button or debounce)
-
-> Hint: debouncing with plain React means `useEffect` + `setTimeout` + a cleanup function. Returning the cleanup from `useEffect` cancels the pending timer when the input changes again before the delay is up.
+- "Go" button to trigger an immediate search
+- Auto-search as the user types, but don't fire on every keystroke — see **Edge Case #1** above
 
 **Component Interface:**
 ```typescript
@@ -231,11 +239,8 @@ Pass the selected status to `handleStatusChange()` in `App.tsx`.
 - Display players in a table format
 - Columns: Player ID, Name, Email, Balance, Status
 - The **Status** column comes from `online: boolean` — display it as a coloured "Online" / "Offline" badge
-- Accept a `players` array and a `loading` boolean as props
-- When `loading` is `true`, show a **loading skeleton** instead of the table rows — do not show stale data while a new search is in progress
-- **Implement row virtualization** — the dataset can contain hundreds of rows. Only the rows currently visible in the viewport should be rendered in the DOM. Use [`@tanstack/react-virtual`](https://tanstack.com/virtual/latest) for this.
-
-> Why virtualization? Rendering 200 DOM rows is slow. Rendering 10 visible rows + recycling them as the user scrolls is fast. This is standard practice in any BO or data-heavy dashboard. The table should have a fixed height (e.g. `500px`) with overflow scroll, and `useVirtualizer` manages which rows are mounted.
+- When `loading` is `true`, show a loading skeleton instead of the table rows
+- The table has a fixed height with a scrollable body — don't render all rows at once; only render what's visible. See **Edge Case #4** above.
 
 **Component Interface:**
 ```typescript
@@ -243,19 +248,6 @@ interface PlayerTableProps {
   players: Player[];
   loading: boolean;
 }
-```
-
-**Virtualization sketch:**
-```typescript
-import { useVirtualizer } from '@tanstack/react-virtual';
-
-const rowVirtualizer = useVirtualizer({
-  count: players.length,
-  getScrollElement: () => parentRef.current,
-  estimateSize: () => 48, // row height in px
-});
-
-// Render only rowVirtualizer.getVirtualItems() — not the full players array
 ```
 
 #### 4. **Pagination Component** (`src/components/Pagination.tsx`)
@@ -283,16 +275,17 @@ interface PaginationProps {
 - Uncomment the component imports
 - Replace the TODO placeholders with your components
 - Wire the debounce into `useEffect` (the commented-out block shows where)
-- Make sure `handleStatusChange` triggers a new search
-- Test that search, status filter, loading states, error states, and pagination all work correctly
+- Make sure `handleStatusChange` triggers a new search with page reset
+- Think about how you model your async state — see **Edge Case #3** above
+- Think about whether slow responses can arrive out of order — see **Edge Case #2** above
 
 #### 6. **Handle Errors**
 
-The search API (`src/api/searchPlayers.ts`) randomly fails ~10% of the time to simulate real network errors.
+The search API (`src/api/searchPlayers.ts`) randomly fails ~10% of the time.
 
-- Catch errors and show a visible error message to the user
+- Show a clear error message to the user when a request fails
 - Provide a **Retry** button that re-runs the last search
-- Do not leave the user staring at a broken empty table with no explanation
+- Think: *is it possible for your UI to show an error banner and a table at the same time? Should it be?*
 
 ### UI Library
 
@@ -399,11 +392,12 @@ After you submit, we'll schedule a 15-minute walkthrough where you'll:
 1. **Show your commit history** and explain your progression
 2. **Walk through your component structure** and explain your decisions
 3. **Demonstrate a specific commit** — we'll pick one and you'll show what worked at that point
-4. **Explain your debounce implementation** — how does it prevent unnecessary API calls? What happens if you remove the cleanup function?
-5. **Explain how you handle the loading state** — what does the UI show between the request firing and the response arriving?
-6. **Explain your virtualization setup** — what is `useVirtualizer` doing? Why is the total container height set to `rowVirtualizer.getTotalSize()`? What breaks if you render all rows instead?
-7. **Explain your discriminated union state** — why is `{ status: 'loading' }` better than separate `loading` + `error` + `data` booleans?
-8. **Live coding challenge** — we'll give you a small extension to implement while we watch (15 min)
+4. **Debounce** — what problem does it solve? What happens if you remove the cleanup function from your `useEffect`? Can you show it breaking without it?
+5. **Loading state** — what does the UI show in the 600ms between the request firing and the response arriving? Could the user see stale data?
+6. **Error handling** — trigger an error in the browser (the API fails randomly ~10% of calls). Walk us through what the user sees and how they recover.
+7. **Virtualization** — open DevTools, inspect the DOM while scrolling. How many `<tr>` elements are in the DOM at any time? What would happen without virtualization at 10,000 rows?
+8. **State modeling** — can your app ever show an error message *and* a table of results at the same time? Should it be able to? How does your state structure prevent or allow that?
+9. **Live coding challenge** — we'll give you a small extension to implement while we watch (15 min)
 7. **Explain any bonus features you implemented**
 8. **Discuss AI usage** — what did AI generate vs. what you modified and why?
 
