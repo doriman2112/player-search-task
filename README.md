@@ -121,6 +121,75 @@ npm run dev
 
 The app will open at `http://localhost:5173` and you'll see placeholder text for the components you need to build.
 
+## 🧑‍💻 Coding Standards
+
+These are not optional — they will be evaluated in the code review and walkthrough.
+
+### TypeScript
+- Use TypeScript strictly throughout — no `any`, no type assertions unless genuinely necessary
+- Define explicit interfaces/types for all props, API responses, and state
+- Use union types and discriminated unions instead of booleans where they describe state better
+  ```typescript
+  // ❌ BAD
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<Player[]>([]);
+
+  // ✅ GOOD — one state variable, mutually exclusive states
+  type SearchState =
+    | { status: 'idle' }
+    | { status: 'loading' }
+    | { status: 'success'; players: Player[]; total: number }
+    | { status: 'error'; message: string };
+  ```
+
+### Modern ES6+
+Write clean, modern JavaScript — avoid patterns from the pre-ES6 era:
+
+```typescript
+// ❌ Avoid
+var items = [];
+for (var i = 0; i < players.length; i++) { ... }
+function handleClick() { ... }
+
+// ✅ Use
+const items = players
+  .filter(({ online }) => online)
+  .map(({ playerId, name }) => ({ id: playerId, label: name }));
+
+const handleClick = () => { ... };
+```
+
+Required patterns:
+- `const`/`let` — never `var`
+- Arrow functions for callbacks and component definitions
+- Destructuring in function params, array/object assignments
+- Optional chaining (`?.`) and nullish coalescing (`??`) where appropriate
+- Template literals instead of string concatenation
+- Array methods (`map`, `filter`, `reduce`, `find`) over imperative loops
+- Async/await over `.then()` chains
+- Named exports for utilities; default export for components
+
+### Error Handling
+Every `async` call must be wrapped in try/catch. Errors must be surfaced to the user — never silently swallowed:
+
+```typescript
+// ❌ BAD
+const data = await searchPlayers(params);
+setPlayers(data.players);
+
+// ✅ GOOD
+try {
+  const data = await searchPlayers(params);
+  setState({ status: 'success', ...data });
+} catch (err) {
+  const message = err instanceof Error ? err.message : 'Unexpected error';
+  setState({ status: 'error', message });
+}
+```
+
+---
+
 ## 📝 Your Tasks
 
 ### Required Features (Must Complete)
@@ -163,7 +232,10 @@ Pass the selected status to `handleStatusChange()` in `App.tsx`.
 - Columns: Player ID, Name, Email, Balance, Status
 - The **Status** column comes from `online: boolean` — display it as a coloured "Online" / "Offline" badge
 - Accept a `players` array and a `loading` boolean as props
-- When `loading` is `true`, show a **loading skeleton or spinner** instead of the table rows — do not show stale data while a new search is in progress
+- When `loading` is `true`, show a **loading skeleton** instead of the table rows — do not show stale data while a new search is in progress
+- **Implement row virtualization** — the dataset can contain hundreds of rows. Only the rows currently visible in the viewport should be rendered in the DOM. Use [`@tanstack/react-virtual`](https://tanstack.com/virtual/latest) for this.
+
+> Why virtualization? Rendering 200 DOM rows is slow. Rendering 10 visible rows + recycling them as the user scrolls is fast. This is standard practice in any BO or data-heavy dashboard. The table should have a fixed height (e.g. `500px`) with overflow scroll, and `useVirtualizer` manages which rows are mounted.
 
 **Component Interface:**
 ```typescript
@@ -171,6 +243,19 @@ interface PlayerTableProps {
   players: Player[];
   loading: boolean;
 }
+```
+
+**Virtualization sketch:**
+```typescript
+import { useVirtualizer } from '@tanstack/react-virtual';
+
+const rowVirtualizer = useVirtualizer({
+  count: players.length,
+  getScrollElement: () => parentRef.current,
+  estimateSize: () => 48, // row height in px
+});
+
+// Render only rowVirtualizer.getVirtualItems() — not the full players array
 ```
 
 #### 4. **Pagination Component** (`src/components/Pagination.tsx`)
@@ -316,7 +401,9 @@ After you submit, we'll schedule a 15-minute walkthrough where you'll:
 3. **Demonstrate a specific commit** — we'll pick one and you'll show what worked at that point
 4. **Explain your debounce implementation** — how does it prevent unnecessary API calls? What happens if you remove the cleanup function?
 5. **Explain how you handle the loading state** — what does the UI show between the request firing and the response arriving?
-6. **Live coding challenge** — we'll give you a small extension to implement while we watch (15 min)
+6. **Explain your virtualization setup** — what is `useVirtualizer` doing? Why is the total container height set to `rowVirtualizer.getTotalSize()`? What breaks if you render all rows instead?
+7. **Explain your discriminated union state** — why is `{ status: 'loading' }` better than separate `loading` + `error` + `data` booleans?
+8. **Live coding challenge** — we'll give you a small extension to implement while we watch (15 min)
 7. **Explain any bonus features you implemented**
 8. **Discuss AI usage** — what did AI generate vs. what you modified and why?
 
@@ -340,12 +427,12 @@ We want you to succeed! Don't hesitate to ask.
 
 Here's a rough guide (adjust based on your pace):
 
-- **30 min** - SearchBar component + debounce
-- **15 min** - Status filter
-- **45 min** - PlayerTable with loading skeleton
-- **15 min** - Error handling + Retry
-- **30 min** - Pagination component
-- **45 min** - Wire everything together, test all states, clean up, commit
+- **30 min** — SearchBar component + debounce
+- **15 min** — Status filter
+- **60 min** — PlayerTable with loading skeleton + row virtualization
+- **15 min** — Error handling + Retry
+- **30 min** — Pagination component
+- **30 min** — Wire everything together, test all states, clean up, commit
 
 Remember: Working code > perfect code. Get something functional first, then improve it.
 

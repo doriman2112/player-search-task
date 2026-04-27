@@ -1,0 +1,60 @@
+---
+description: Coding standards — ES6+, TypeScript strictness, error handling, virtualization
+alwaysApply: true
+---
+
+# Coding Standards
+
+## TypeScript
+
+- No `any`. Use `unknown` and narrow it, or define a proper type.
+- Model mutually exclusive states with discriminated unions, not multiple booleans:
+
+```typescript
+// ✅
+type SearchState =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; players: Player[]; total: number }
+  | { status: 'error'; message: string };
+```
+
+## ES6+ — Required Patterns
+
+- `const`/`let` only — never `var`
+- Arrow functions for callbacks and utilities
+- Destructuring in params and assignments
+- Optional chaining `?.` and nullish coalescing `??`
+- Template literals over string concatenation
+- `map`/`filter`/`reduce`/`find` over imperative `for` loops
+- `async/await` over `.then()` chains
+
+## Error Handling
+
+Every `async` call must be wrapped in try/catch. Never swallow errors silently.
+
+```typescript
+// ✅
+try {
+  const data = await searchPlayers(params);
+  setState({ status: 'success', ...data });
+} catch (err) {
+  setState({ status: 'error', message: err instanceof Error ? err.message : 'Unexpected error' });
+}
+```
+
+## Virtualization
+
+Use `@tanstack/react-virtual` for any list or table that may contain more than ~50 rows.
+
+```typescript
+import { useVirtualizer } from '@tanstack/react-virtual';
+
+const rowVirtualizer = useVirtualizer({
+  count: items.length,
+  getScrollElement: () => parentRef.current,
+  estimateSize: () => 48,
+});
+
+// Only render rowVirtualizer.getVirtualItems() — never the full array
+```

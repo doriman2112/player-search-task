@@ -17,11 +17,13 @@ export interface SearchResult {
  * Simulates an async server-side search API.
  *
  * - Introduces a realistic ~600ms network delay
- * - Has a small random chance of failing (simulates real network errors)
- * - Accepts a query (matched against playerId, email, name) and optional status filter
+ * - Has a ~10% random failure rate to simulate real network errors
+ * - Returns a page of results + total count for pagination
+ * - Filters by query (playerId, email, name) and optional online status
  *
  * In production this would be a real HTTP call, e.g.:
- *   return fetch(`/api/players?q=${params.query}&page=${params.page}`)
+ *   return fetch(`/api/players?q=${params.query}&page=${params.page}&status=${params.status}`)
+ *     .then(res => { if (!res.ok) throw new Error(res.statusText); return res.json(); })
  */
 export async function searchPlayers(params: SearchParams): Promise<SearchResult> {
   await new Promise((res) => setTimeout(res, 600));
