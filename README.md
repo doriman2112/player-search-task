@@ -322,28 +322,7 @@ git push origin feature/player-search-implementation
 - [ ] App runs without errors (`npm run dev`)
 - [ ] At least 5 meaningful commits with descriptive messages
 - [ ] Feature branch pushed to the repository
-- [ ] Your notes added below
 
----
-
-## 📝 Add Your Notes Here
-
-### My Approach
-*How did you break down the problem? Where did you start?*
-
-### Decisions I Made
-*What choices did you make and why? (component structure, state shape, libraries)*
-
-### Edge Cases I Tackled
-*Which of the four Food for Thought problems did you address? How?*
-
-### AI Usage
-*Be honest — what did you use AI for? What did you write yourself? What did you change from AI output?*
-
-### What I'd Improve With More Time
-*What would you refactor or add with another hour?*
-
----
 
 ## 🎓 Code Walkthrough
 
@@ -362,21 +341,6 @@ After you submit we will schedule a short screen share. Be ready to:
 
 If you have any questions during the task, don't hesitate to reach out. It's always better to ask than to go in the wrong direction — that's true in this exercise as much as it is in real software development. 🙂
 
-## ⏱️ Time Guide
-
-You have **2.5 hours** of development time. Here is a rough guide — adjust to your own pace:
-
-| Task | Suggested time |
-|---|---|
-| SearchBar + debounce | 20 min |
-| Status filter | 10 min |
-| PlayerTable + skeleton + sorting | 25 min |
-| Pagination | 15 min |
-| Error handling + empty state | 15 min |
-| Responsive layout | 15 min |
-| URL sync + localStorage + theme toggle | 25 min |
-| Wiring + testing + cleanup + notes | 25 min |
-| **Total** | **~2.5 hours** |
 
 Working code beats perfect code. Get something functional first, then improve it.
 
