@@ -20,6 +20,8 @@ Below is the target layout your implementation should match. Exact colours are u
 │  │  player_id, email, phone                 │  │   Go    │      │
 │  └──────────────────────────────────────────┘  └─────────┘      │
 │                                                                  │
+│  [ All ]  [ Online ]  [ Offline ]                                │  ← Status filter
+│                                                                  │
 │  Showing 1–10 of 25 results                                      │
 │                                                                  │
 │  ┌──────────┬──────────────┬───────────────────┬──────────┬──────┐  │
@@ -31,17 +33,22 @@ Below is the target layout your implementation should match. Exact colours are u
 │  │  ...     │  ...         │  ...              │  ...     │ ...  │  │
 │  └──────────┴──────────────┴───────────────────┴──────────┴──────┘  │
 │                                                                  │
+│   (while loading, show skeletons instead of rows above)          │
+│                                                                  │
 │              [← Previous]   Page 1 of 3   [Next →]              │  ← Pagination
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 **Notes on the layout:**
-- The search bar sits above the table, full-width with the "Go" button inline
+- The search bar is full-width with the "Go" button inline — auto-searches after 500ms of no typing
+- Status filter sits below the search bar — "All", "Online", "Offline" pill buttons
 - Column headers are clickable to sort — show an arrow indicator (▲ ascending, ▼ descending)
-- Status is a coloured badge: green dot for Online, red dot for Offline
-- Result count ("Showing 1–10 of 25") sits between the search bar and the table
-- Pagination is centred below the table
+- While a search is loading, table rows show grey skeleton bars instead of data
+- If the API call fails, show an error message with a Retry button above the table
+- Status is a coloured badge: green for Online, grey for Offline
+- Result count ("Showing 1–10 of 25") sits between the filters and the table
+- Pagination is at the bottom, result count on the left, buttons on the right
 - The dark/light toggle lives in the top-right of the header
 
 ---
@@ -118,63 +125,89 @@ The app will open at `http://localhost:5173` and you'll see placeholder text for
 
 ### Required Features (Must Complete)
 
-You need to implement these three components:
+You need to implement these four things:
 
 #### 1. **SearchBar Component** (`src/components/SearchBar.tsx`)
 
 **Requirements:**
-- Text input that accepts player ID, email, or phone
+- Text input that accepts player ID, email, or name
 - Placeholder: `"player_id, email, phone"`
-- "Go" button to trigger search
-- Call `onSearch(query)` callback when user searches
+- "Go" button to trigger search immediately
+- **Auto-search as the user types** — but do NOT fire a request on every keystroke. Implement **debouncing** so the API is called only after the user stops typing for ~500ms
+- Call `onSearch(query)` callback when the search triggers (either via button or debounce)
+
+> Hint: debouncing with plain React means `useEffect` + `setTimeout` + a cleanup function. Returning the cleanup from `useEffect` cancels the pending timer when the input changes again before the delay is up.
 
 **Component Interface:**
 ```typescript
 interface SearchBarProps {
   onSearch: (query: string) => void;
+  initialValue?: string;
 }
 ```
 
-#### 2. **PlayerTable Component** (`src/components/PlayerTable.tsx`)
+#### 2. **Status Filter**
+
+Add a filter (e.g. pill buttons or a select) that lets the user narrow results to:
+- **All** (default)
+- **Online only**
+- **Offline only**
+
+This should work alongside the text search — both filters apply at the same time.
+Pass the selected status to `handleStatusChange()` in `App.tsx`.
+
+#### 3. **PlayerTable Component** (`src/components/PlayerTable.tsx`)
 
 **Requirements:**
 - Display players in a table format
-- Show columns: Player ID, Name, Email, Balance, Status
-- The **Status** column comes from the `online: boolean` field on the `Player` type — display it as "Online" / "Offline"
-- Accept `players` array as prop
-- Style to look professional (match BO aesthetic if possible)
+- Columns: Player ID, Name, Email, Balance, Status
+- The **Status** column comes from `online: boolean` — display it as a coloured "Online" / "Offline" badge
+- Accept a `players` array and a `loading` boolean as props
+- When `loading` is `true`, show a **loading skeleton or spinner** instead of the table rows — do not show stale data while a new search is in progress
 
 **Component Interface:**
 ```typescript
 interface PlayerTableProps {
   players: Player[];
+  loading: boolean;
 }
 ```
 
-#### 3. **Pagination Component** (`src/components/Pagination.tsx`)
+#### 4. **Pagination Component** (`src/components/Pagination.tsx`)
 
 **Requirements:**
 - "Previous" and "Next" buttons
-- Show current page and total pages
+- Show "Showing X–Y of Z results" count
+- Disable Previous on page 1, Next on last page
 - Call `onNext()` and `onPrev()` callbacks
-- Handle edge cases (first page, last page)
 
 **Component Interface:**
 ```typescript
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
+  totalResults: number;
+  pageSize: number;
   onNext: () => void;
   onPrev: () => void;
 }
 ```
 
-#### 4. **Wire Everything Together in App.tsx**
+#### 5. **Wire Everything Together in App.tsx**
 
 - Uncomment the component imports
 - Replace the TODO placeholders with your components
-- Pass the correct props to each component
-- Test that search, display, and pagination all work together
+- Wire the debounce into `useEffect` (the commented-out block shows where)
+- Make sure `handleStatusChange` triggers a new search
+- Test that search, status filter, loading states, error states, and pagination all work correctly
+
+#### 6. **Handle Errors**
+
+The search API (`src/api/searchPlayers.ts`) randomly fails ~10% of the time to simulate real network errors.
+
+- Catch errors and show a visible error message to the user
+- Provide a **Retry** button that re-runs the last search
+- Do not leave the user staring at a broken empty table with no explanation
 
 ### UI Library
 
@@ -190,16 +223,12 @@ Browse all available components at [ui.shadcn.com/docs/components](https://ui.sh
 
 ### Bonus Features (If Time Permits)
 
-- ⭐ Add loading state during search (simulate with `setTimeout`)
-- ⭐ Show result count: "Showing 1-10 of 25 results"
-- ⭐ Disable Previous on page 1, Next on last page
-- ⭐ Handle Enter key in search input
-- ⭐ Show empty state when no results
-- ⭐ Style to match the RealPlay BO screenshot (dark header, teal buttons)
-- ⭐ **Column sorting** — clicking a column header sorts the table by that column (ascending/descending toggle)
-- ⭐ **Persist search in URL** — reflect the current query and page in the URL as GET params (e.g. `?q=john&page=2`) so the search is shareable and survives a browser refresh. Use the browser's native `URLSearchParams` or React Router's `useSearchParams`
-- ⭐ **Session persistence** — save the last search query in `localStorage` so it is restored when the user reopens the tab
-- ⭐ **Dark / Light theme toggle** — add a toggle button in the header that switches between a dark and light theme across the whole app. ShadCN has built-in support for this via CSS variables
+- ⭐ **Column sorting** — clicking a column header sorts the table ascending/descending (toggle)
+- ⭐ **Empty state** — a friendly message when the search returns zero results
+- ⭐ **Persist search in URL** — reflect the current query, status filter and page as GET params (e.g. `?q=john&status=online&page=2`) so the search is shareable and survives a browser refresh
+- ⭐ **Session persistence** — restore the last search query from `localStorage` when the user reopens the tab (the scaffold already sets up the `STORAGE_KEY` constant for you)
+- ⭐ **Dark / Light theme toggle** — add a toggle button in the header; the scaffold already includes the `useTheme` hook wired up for you
+- ⭐ **Abort in-flight requests** — if the user types quickly, an older slow request can arrive after a newer fast one and overwrite the correct result. Use `AbortController` to cancel the previous request before firing a new one
 
 ## 🔧 Working with Git
 
@@ -284,10 +313,12 @@ After you submit, we'll schedule a 15-minute walkthrough where you'll:
 
 1. **Show your commit history** and explain your progression
 2. **Walk through your component structure** and explain your decisions
-3. **Demonstrate a specific commit** - we'll pick one and you'll show what worked at that point
-4. **Explain your pagination logic** - how does it calculate which players to show?
-5. **Explain any bonus features you implemented** - e.g. how sorting works, how you synced state to the URL
-6. **Discuss AI usage** - what did AI generate vs. what you modified and why?
+3. **Demonstrate a specific commit** — we'll pick one and you'll show what worked at that point
+4. **Explain your debounce implementation** — how does it prevent unnecessary API calls? What happens if you remove the cleanup function?
+5. **Explain how you handle the loading state** — what does the UI show between the request firing and the response arriving?
+6. **Live coding challenge** — we'll give you a small extension to implement while we watch (15 min)
+7. **Explain any bonus features you implemented**
+8. **Discuss AI usage** — what did AI generate vs. what you modified and why?
 
 ### Tips for the Walkthrough
 
@@ -309,10 +340,12 @@ We want you to succeed! Don't hesitate to ask.
 
 Here's a rough guide (adjust based on your pace):
 
-- **45 min** - SearchBar component
-- **1 hour** - PlayerTable component  
-- **45 min** - Pagination component
-- **30 min** - Wire everything together in App, test, clean up, commit
+- **30 min** - SearchBar component + debounce
+- **15 min** - Status filter
+- **45 min** - PlayerTable with loading skeleton
+- **15 min** - Error handling + Retry
+- **30 min** - Pagination component
+- **45 min** - Wire everything together, test all states, clean up, commit
 
 Remember: Working code > perfect code. Get something functional first, then improve it.
 
