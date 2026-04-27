@@ -1,6 +1,3 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -10,6 +7,21 @@ interface PaginationProps {
   onPrev: () => void;
 }
 
+// TODO: Implement the Pagination component
+//
+// Requirements:
+// - "Previous" and "Next" buttons
+// - Disable Previous on page 1, disable Next on the last page
+// - Show result count: "Showing X–Y of Z results"
+//   (calculate X and Y from currentPage and pageSize)
+// - Show current position: "Page N of M"
+//
+// Available ShadCN components:
+//   import { Button } from '@/components/ui/button';
+//
+// Available icons:
+//   import { ChevronLeft, ChevronRight } from 'lucide-react';
+
 const Pagination: React.FC<PaginationProps> = ({
   currentPage,
   totalPages,
@@ -18,39 +30,12 @@ const Pagination: React.FC<PaginationProps> = ({
   onNext,
   onPrev,
 }) => {
-  const from = totalResults === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-  const to = Math.min(currentPage * pageSize, totalResults);
+  // TODO: implement
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-      <p className="text-sm text-muted-foreground">
-        {totalResults === 0
-          ? 'No results'
-          : `Showing ${from}–${to} of ${totalResults} results`}
-      </p>
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onPrev}
-          disabled={currentPage <= 1}
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Previous
-        </Button>
-        <span className="text-sm text-muted-foreground px-2 whitespace-nowrap">
-          Page {currentPage} of {totalPages}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onNext}
-          disabled={currentPage >= totalPages}
-        >
-          Next
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
+    <div className="text-muted-foreground text-sm p-4 border border-dashed border-border rounded">
+      <p>TODO: Implement Pagination</p>
+      <p>Page {currentPage} of {totalPages} — {totalResults} total results</p>
     </div>
   );
 };

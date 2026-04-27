@@ -1,39 +1,34 @@
-import React, { useState, KeyboardEvent } from 'react';
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { Player } from '@/types/player';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
   initialValue?: string;
 }
 
+// TODO: Implement the SearchBar component
+//
+// Requirements:
+// - Text input with placeholder "player_id, email, phone"
+// - "Go" button that triggers onSearch(query) immediately
+// - Auto-search as the user types — but not on every keystroke.
+//   See Edge Case #1 in the README (debouncing).
+// - Disable the Go button when the input is empty
+//
+// Available ShadCN components (already installed):
+//   import { Input } from '@/components/ui/input';
+//   import { Button } from '@/components/ui/button';
+//
+// Available icons (lucide-react is installed):
+//   import { Search } from 'lucide-react';
+
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch, initialValue = '' }) => {
-  const [value, setValue] = useState(initialValue);
-
-  const handleSearch = () => {
-    onSearch(value.trim());
-  };
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') handleSearch();
-  };
+  // TODO: implement
 
   return (
-    <div className="flex gap-2 w-full">
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          className="pl-9"
-          placeholder="player_id, email, phone"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
-      </div>
-      <Button onClick={handleSearch} disabled={!value.trim()}>
-        Go
-      </Button>
+    <div>
+      <p className="text-muted-foreground text-sm">
+        TODO: Implement SearchBar — see requirements above
+      </p>
     </div>
   );
 };
