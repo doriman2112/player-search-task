@@ -289,15 +289,20 @@ The search API (`src/api/searchPlayers.ts`) randomly fails ~10% of the time.
 
 ### UI Library
 
-**ShadCN/UI** is pre-installed and ready to use. Several components are already available in `src/components/ui/`:
-- `Button`, `Input`, `Card`, `Table`, `Badge`
+**ShadCN/UI** is configured and ready to use — but no components have been added yet. Add each component you need by running:
 
-To add more components:
 ```bash
 npx shadcn@latest add <component-name>
+
+# Examples:
+npx shadcn@latest add button
+npx shadcn@latest add input
+npx shadcn@latest add table
+npx shadcn@latest add badge
+npx shadcn@latest add skeleton
 ```
 
-Browse all available components at [ui.shadcn.com/docs/components](https://ui.shadcn.com/docs/components).
+Each command generates the component file in `src/components/ui/` and installs any required dependencies. Browse all available components at [ui.shadcn.com/docs/components](https://ui.shadcn.com/docs/components).
 
 ### Bonus Features (If Time Permits)
 

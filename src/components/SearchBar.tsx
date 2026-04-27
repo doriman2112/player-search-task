@@ -14,11 +14,12 @@ interface SearchBarProps {
 //   See Edge Case #1 in the README (debouncing).
 // - Disable the Go button when the input is empty
 //
-// Available ShadCN components (already installed):
-//   import { Input } from '@/components/ui/input';
-//   import { Button } from '@/components/ui/button';
+// ShadCN components — add the ones you need:
+//   npx shadcn@latest add input
+//   npx shadcn@latest add button
+//   then import: import { Input } from '@/components/ui/input';
 //
-// Available icons (lucide-react is installed):
+// Icons (lucide-react is already installed):
 //   import { Search } from 'lucide-react';
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch, initialValue = '' }) => {

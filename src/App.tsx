@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Sun, Moon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { searchPlayers, SearchResult } from '@/api/searchPlayers';
+// NOTE: The theme toggle button below uses a plain <button> until you add ShadCN.
+// Once you run `npx shadcn@latest add button` you can swap it for <Button>.
 // TODO: Uncomment these imports as you implement each component
 // import SearchBar from '@/components/SearchBar';
 // import PlayerTable from '@/components/PlayerTable';
@@ -115,9 +116,9 @@ function App() {
             <h1 className="text-lg font-semibold">RealPlay Back Office</h1>
             <p className="text-xs text-muted-foreground mt-0.5">Player Search</p>
           </div>
-          <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
+          <button onClick={toggle} aria-label="Toggle theme" className="p-2 rounded hover:bg-muted transition-colors">
             {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
+          </button>
         </div>
       </header>
 

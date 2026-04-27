@@ -16,10 +16,10 @@ interface PaginationProps {
 //   (calculate X and Y from currentPage and pageSize)
 // - Show current position: "Page N of M"
 //
-// Available ShadCN components:
-//   import { Button } from '@/components/ui/button';
+// ShadCN components — add what you need:
+//   npx shadcn@latest add button
 //
-// Available icons:
+// Icons (lucide-react is already installed):
 //   import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Pagination: React.FC<PaginationProps> = ({

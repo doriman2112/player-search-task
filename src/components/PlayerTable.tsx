@@ -17,12 +17,12 @@ interface PlayerTableProps {
 // - Only render rows that are VISIBLE in the scroll area.
 //   See Edge Case #4 in the README (virtualization).
 //
-// Available ShadCN components:
-//   import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-//   import { Badge } from '@/components/ui/badge';
-//   import { Skeleton } from '@/components/ui/skeleton';  ← run: npx shadcn@latest add skeleton
+// ShadCN components — add the ones you need:
+//   npx shadcn@latest add table
+//   npx shadcn@latest add badge
+//   npx shadcn@latest add skeleton
 //
-// Virtualization library (needs installing):
+// Virtualization library — install it:
 //   npm install @tanstack/react-virtual
 //   import { useVirtualizer } from '@tanstack/react-virtual';
 
