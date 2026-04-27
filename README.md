@@ -162,6 +162,42 @@ The fake API (`src/api/searchPlayers.ts`) randomly fails ~10% of the time to sim
 - Show a **Retry** button that re-runs the last search
 - Never leave the user staring at an empty screen with no explanation
 
+### Empty State
+
+When a search returns zero results, show a friendly message — not just an empty table.
+
+### Responsive Layout
+
+The screen must work on both desktop and mobile:
+
+- On mobile, the search input and "Go" button stack vertically
+- The table scrolls horizontally on small screens — the user should be able to reach every column
+- The pagination result count and buttons stack vertically on mobile
+
+### URL Sync
+
+Reflect the current search state in the URL so that searches are shareable and survive a browser refresh.
+
+- Query, status filter, and current page should be readable from the URL (e.g. `?q=john&status=online&page=2`)
+- When the page loads with params already in the URL, restore the search state from them
+- When the user changes the query or status, reset to page 1
+
+> 📌 `STORAGE_KEY` and a `useTheme` hook are already set up in `App.tsx` for the next two features.
+
+### Session Restore
+
+Save the last search query in `localStorage` so it is restored when the user reopens the tab.
+
+- On page load: if there are no URL params, restore the last query from `localStorage`
+- On every search: update `localStorage` with the latest query
+
+### Dark / Light Theme
+
+Add a toggle button in the header that switches the entire app between dark and light mode.
+
+- The `useTheme` hook is already implemented in `App.tsx` — you just need to connect a button to it
+- The user's preference should be remembered across page refreshes
+
 ---
 
 ## 🍽️ Food for Thought
@@ -246,12 +282,8 @@ Some questions to guide your thinking:
 
 If you finish early, these will make your submission stand out:
 
-- **Row virtualization** — only render rows currently visible in the scroll area instead of all 200 at once. See Food for Thought #4. (`@tanstack/react-virtual` is the library to look at)
-- **Empty state** — a clear message when the search returns no results
-- **URL sync** — reflect query, status, and page as GET params so the search is shareable and survives a page refresh
-- **Session restore** — save the last search query in `localStorage` and restore it on page load (`STORAGE_KEY` is already in `App.tsx`)
-- **Dark / Light theme** — the `useTheme` hook in `App.tsx` is already wired up; add a toggle button in the header to use it
-- **Cancel stale requests** — use `AbortController` to cancel the previous request before firing a new one (the proper fix for Food for Thought #2)
+- **Cancel stale requests** — use `AbortController` to cancel the previous in-flight request before firing a new one. This is the proper fix for Food for Thought #2. Most implementations have a subtle bug here — see if yours does.
+- **Row virtualization** — only render the rows currently visible in the scroll area instead of all 200 at once. See Food for Thought #4. (`@tanstack/react-virtual` is the library to look at)
 
 ---
 
@@ -279,8 +311,14 @@ git push origin feature/player-search-implementation
 
 - [ ] SearchBar, PlayerTable, and Pagination are implemented
 - [ ] Status filter works alongside text search
+- [ ] Column sorting works (▲/▼ indicator on active column)
 - [ ] Loading skeleton shows while waiting for results
-- [ ] Errors show a message and a Retry button
+- [ ] Error message and Retry button appear when the API fails
+- [ ] Empty state shows when search returns no results
+- [ ] Layout is responsive (mobile + desktop)
+- [ ] Search state is reflected in the URL (`?q=&status=&page=`)
+- [ ] Last query is saved and restored from `localStorage`
+- [ ] Dark / Light theme toggle works in the header
 - [ ] App runs without errors (`npm run dev`)
 - [ ] At least 5 meaningful commits with descriptive messages
 - [ ] Feature branch pushed to the repository
@@ -314,13 +352,34 @@ After you submit we will schedule a short screen share. Be ready to:
 1. Walk through your commit history and explain your progression
 2. Pick a component and explain your implementation decisions
 3. **Debounce:** show what happens in the browser if you remove the cleanup. Can you make it break live?
-4. **Loading state:** what does the user see during the API delay? Can stale data ever appear?
+4. **Loading state:** what does the user see during the 600ms API delay? Can stale data ever appear?
 5. **Error handling:** trigger a real error live (the API fails ~10% of calls) and walk us through the recovery flow
-6. **Virtualization:** open DevTools and inspect the table while scrolling — how many `<tr>` elements are in the DOM?
-7. **State modeling:** can your app show an error banner *and* a data table at the same time? Should it? How does your code prevent or allow that?
-8. **Live challenge:** we'll give you one small feature to add while we watch (15 min)
-9. **AI usage:** walk us through what you generated vs. wrote yourself
+6. **URL sync:** open the app, search for something, copy the URL, open it in a new tab — does it restore correctly? What happens to the page number when you change the query?
+7. **Responsive:** resize the browser to mobile width — does everything still work? Walk us through how you handled the table on small screens.
+8. **State modeling:** can your app show an error banner *and* a data table at the same time? Should it? How does your code prevent or allow that?
+9. **Live challenge:** we'll give you one small feature to add while we watch (15 min)
+10. **AI usage:** walk us through what you generated vs. wrote yourself
 
 If you have any questions during the task, don't hesitate to reach out. It's always better to ask than to go in the wrong direction — that's true in this exercise as much as it is in real software development. 🙂
+
+## ⏱️ Time Guide
+
+You have **2.5 hours** of development time. Here is a rough guide — adjust to your own pace:
+
+| Task | Suggested time |
+|---|---|
+| SearchBar + debounce | 20 min |
+| Status filter | 10 min |
+| PlayerTable + skeleton + sorting | 25 min |
+| Pagination | 15 min |
+| Error handling + empty state | 15 min |
+| Responsive layout | 15 min |
+| URL sync + localStorage + theme toggle | 25 min |
+| Wiring + testing + cleanup + notes | 25 min |
+| **Total** | **~2.5 hours** |
+
+Working code beats perfect code. Get something functional first, then improve it.
+
+---
 
 **Good luck — we're excited to see what you build!** 🚀
