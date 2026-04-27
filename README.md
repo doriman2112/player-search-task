@@ -45,7 +45,7 @@ A few things to note:
 
 - The search input auto-searches as the user types (after a short pause) and also has a "Go" button for immediate search
 - The status filter pills — All, Online, Offline — work together with the text search at the same time
-- Column headers are clickable to sort ascending / descending
+- Column headers are clickable to sort ascending / descending — show an arrow indicator (▲ / ▼)
 - While waiting for results, the table rows are replaced with skeleton bars
 - If the API fails, the user sees an error message and a Retry button
 - The dark/light toggle in the header switches the entire theme
@@ -125,7 +125,8 @@ A scrollable table of players.
 - Columns: **Player ID** · **Name** · **Email** · **Balance** · **Status**
 - Status comes from `player.online` (boolean) — render as a coloured badge
 - When `loading` is `true`, show skeleton bars instead of rows
-- The table must have a **fixed height with a scrollable body**, and only render the rows **currently visible in the viewport** — see Food for Thought below
+- The table must have a **fixed height with a scrollable body** — all rows can be rendered for now
+- **Column headers are clickable to sort** — clicking the same header again toggles ascending / descending. Show a ▲ / ▼ arrow indicator on the active column.
 
 ```typescript
 interface PlayerTableProps {
@@ -245,7 +246,7 @@ Some questions to guide your thinking:
 
 If you finish early, these will make your submission stand out:
 
-- **Column sorting** — click a column header to sort ascending/descending
+- **Row virtualization** — only render rows currently visible in the scroll area instead of all 200 at once. See Food for Thought #4. (`@tanstack/react-virtual` is the library to look at)
 - **Empty state** — a clear message when the search returns no results
 - **URL sync** — reflect query, status, and page as GET params so the search is shareable and survives a page refresh
 - **Session restore** — save the last search query in `localStorage` and restore it on page load (`STORAGE_KEY` is already in `App.tsx`)
@@ -322,4 +323,4 @@ After you submit we will schedule a short screen share. Be ready to:
 
 If you have any questions during the task, don't hesitate to reach out. It's always better to ask than to go in the wrong direction — that's true in this exercise as much as it is in real software development. 🙂
 
-**Good luck — we're excited to see what you build!**
+**Good luck — we're excited to see what you build!** 🚀
