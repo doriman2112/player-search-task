@@ -6,6 +6,46 @@ This is a starter repository for the RealPlay Frontend Engineering technical ass
 
 **Time Limit:** 3 hours from when you start
 
+## 🖼️ Expected Layout
+
+Below is the target layout your implementation should match. Exact colours are up to you, but the structure — header, search bar, table with sortable columns, and pagination — is required.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  RealPlay Back Office                          [🌙 Dark / Light] │  ← Header
+│  Player Search                                                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌──────────────────────────────────────────┐  ┌─────────┐      │  ← Search bar
+│  │  player_id, email, phone                 │  │   Go    │      │
+│  └──────────────────────────────────────────┘  └─────────┘      │
+│                                                                  │
+│  Showing 1–10 of 25 results                                      │
+│                                                                  │
+│  ┌──────────┬──────────────┬───────────────────┬──────────┬──────┐  │
+│  │ Player ID▲│ Name        │ Email             │ Balance ▼│Status│  │  ← Table
+│  ├──────────┼──────────────┼───────────────────┼──────────┼──────┤  │    (▲▼ = sortable)
+│  │ 3846852  │ John Smith   │ john@example.com  │ $500.00  │ 🟢   │  │
+│  │ 3846845  │ Maria Garcia │ maria@example.com │  $45.30  │ 🔴   │  │
+│  │ 3846838  │ Peter Jones  │ peter@example.com │ $120.75  │ 🟢   │  │
+│  │  ...     │  ...         │  ...              │  ...     │ ...  │  │
+│  └──────────┴──────────────┴───────────────────┴──────────┴──────┘  │
+│                                                                  │
+│              [← Previous]   Page 1 of 3   [Next →]              │  ← Pagination
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Notes on the layout:**
+- The search bar sits above the table, full-width with the "Go" button inline
+- Column headers are clickable to sort — show an arrow indicator (▲ ascending, ▼ descending)
+- Status is a coloured badge: green dot for Online, red dot for Offline
+- Result count ("Showing 1–10 of 25") sits between the search bar and the table
+- Pagination is centred below the table
+- The dark/light toggle lives in the top-right of the header
+
+---
+
 ## 📋 What's Already Done
 
 We've set up the foundation so you can focus on building features:
@@ -35,8 +75,7 @@ We've set up the foundation so you can focus on building features:
 ### 1. Clone & Install
 
 ```bash
-# Clone this repository (replace with actual URL)
-git clone <REPOSITORY_URL>
+git clone https://github.com/doriman2112/player-search-task.git
 cd player-search-task
 
 # Install dependencies
@@ -157,6 +196,10 @@ Browse all available components at [ui.shadcn.com/docs/components](https://ui.sh
 - ⭐ Handle Enter key in search input
 - ⭐ Show empty state when no results
 - ⭐ Style to match the RealPlay BO screenshot (dark header, teal buttons)
+- ⭐ **Column sorting** — clicking a column header sorts the table by that column (ascending/descending toggle)
+- ⭐ **Persist search in URL** — reflect the current query and page in the URL as GET params (e.g. `?q=john&page=2`) so the search is shareable and survives a browser refresh. Use the browser's native `URLSearchParams` or React Router's `useSearchParams`
+- ⭐ **Session persistence** — save the last search query in `localStorage` so it is restored when the user reopens the tab
+- ⭐ **Dark / Light theme toggle** — add a toggle button in the header that switches between a dark and light theme across the whole app. ShadCN has built-in support for this via CSS variables
 
 ## 🔧 Working with Git
 
@@ -243,7 +286,8 @@ After you submit, we'll schedule a 15-minute walkthrough where you'll:
 2. **Walk through your component structure** and explain your decisions
 3. **Demonstrate a specific commit** - we'll pick one and you'll show what worked at that point
 4. **Explain your pagination logic** - how does it calculate which players to show?
-5. **Discuss AI usage** - what did AI generate vs. what you modified and why?
+5. **Explain any bonus features you implemented** - e.g. how sorting works, how you synced state to the URL
+6. **Discuss AI usage** - what did AI generate vs. what you modified and why?
 
 ### Tips for the Walkthrough
 
