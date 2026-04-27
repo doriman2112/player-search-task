@@ -1,20 +1,20 @@
-# RealPlay Back Office — Player Search Task
+# Frontend Engineer — Home Assignment
 
-## Overview
+Hello esteemed developer! 👋
 
-You are building a **player search interface** for an operations back office. Operations teams use this screen every day to look up players by ID, email, or name, filter by online status, and page through results.
-
-**Time limit:** 3 hours from when you start.
+This task will help us assess your frontend engineering skills. Thank you for taking the time — we appreciate it. 🙂
 
 ---
 
-## Expected Result
+## The Task
 
-This is what your finished screen should look like:
+You will build a **player search screen** for a back office system. Operations teams use this screen daily to look up players by ID, email, or name, filter by online status, and page through large result sets.
+
+The screen should look something like this:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  RealPlay Back Office                          [🌙 Dark / Light] │
+│  Back Office                                   [🌙 Dark / Light] │
 │  Player Search                                                   │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
@@ -31,29 +31,30 @@ This is what your finished screen should look like:
 │  ├──────────┼──────────────┼───────────────────┼──────────┼──────┤
 │  │ 3846852  │ John Smith   │ john@example.com  │ $500.00  │ 🟢   │
 │  │ 3846845  │ Maria Garcia │ maria@example.com │  $45.30  │ 🔴   │
-│  │ 3846838  │ Peter Jones  │ peter@example.com │ $120.75  │ 🟢   │
 │  │  ...     │  ...         │  ...              │  ...     │ ...  │
 │  └──────────┴──────────────┴───────────────────┴──────────┴──────┘
 │                                                                  │
-│   (skeleton bars shown here while loading)                       │
+│   (skeleton bars while loading)                                  │
 │                                                                  │
-│  Showing 1–10 of 200        [← Previous]  Page 1 of 20  [Next →]│
+│  Showing 1–10 of 200    [← Previous]   Page 1 of 20   [Next →]  │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-- Search input auto-searches as the user types (after a short pause) and has a "Go" button for immediate search
-- Status filter pills narrow results to All / Online / Offline — works together with the text search
-- Table columns are clickable to sort ascending / descending
-- While waiting for results, skeleton bars replace the table rows
-- If the API fails, show an error message with a Retry button
-- The dark/light toggle in the header switches the whole theme
+A few things to note:
+
+- The search input auto-searches as the user types (after a short pause) and also has a "Go" button for immediate search
+- The status filter pills — All, Online, Offline — work together with the text search at the same time
+- Column headers are clickable to sort ascending / descending
+- While waiting for results, the table rows are replaced with skeleton bars
+- If the API fails, the user sees an error message and a Retry button
+- The dark/light toggle in the header switches the entire theme
 
 ---
 
 ## What Is Already Set Up
 
-You don't need to configure anything — just install dependencies and start coding.
+We've taken care of the boilerplate so you can focus on building.
 
 | What | Where |
 |---|---|
@@ -62,45 +63,45 @@ You don't need to configure anything — just install dependencies and start cod
 | ShadCN/UI (configured, no components added yet) | `components.json`, `src/lib/utils.ts` |
 | Player TypeScript type | `src/types/player.ts` |
 | 200 mock players | `src/data/mockPlayers.ts` |
-| Async search API (fake, with delay + random errors) | `src/api/searchPlayers.ts` |
-| App shell with state, routing hooks, and TODO placeholders | `src/App.tsx` |
+| Async search API (fake, with delay and random errors) | `src/api/searchPlayers.ts` |
+| App shell with state hooks and TODO placeholders | `src/App.tsx` |
 
-> **Read `src/App.tsx` and `src/api/searchPlayers.ts` before you start.**
-> The state management scaffold, API contract, and component prop signatures are already defined there.
+> 📌 Read `src/App.tsx` and `src/api/searchPlayers.ts` before you write a single line.
+> The state structure, API contract, and component prop shapes are already sketched out there.
 
 ---
 
 ## Getting Started
 
 ```bash
-# 1. Clone
+# Clone the repository
 git clone https://github.com/doriman2112/player-search-task.git
 cd player-search-task
 
-# 2. Install dependencies
+# Install dependencies
 npm install
 
-# 3. Create your feature branch
+# Create your feature branch
 git checkout -b feature/player-search-implementation
 
-# 4. Start the dev server
+# Start the dev server — opens at http://localhost:5173
 npm run dev
 ```
 
-The app opens at `http://localhost:5173`. You'll see placeholder boxes where your components should go.
-
 ---
 
-## Your Tasks
+## What You Need to Build
 
-### 1. SearchBar — `src/components/SearchBar.tsx`
+You need to create three components inside `src/components/` and wire them into `src/App.tsx`.
 
-Build a search input with a "Go" button.
+### SearchBar
 
-- Placeholder text: `"player_id, email, phone"`
-- "Go" button triggers `onSearch(query)` immediately
-- Also auto-searches as the user types — but **not on every keystroke** (see Edge Cases below)
-- Disable the "Go" button when the input is empty
+A text input with a "Go" button.
+
+- Placeholder: `"player_id, email, phone"`
+- "Go" triggers `onSearch(query)` immediately
+- Also auto-searches as the user types — but **not on every keystroke** (see Food for Thought below)
+- "Go" is disabled when the input is empty
 
 ```typescript
 interface SearchBarProps {
@@ -109,26 +110,22 @@ interface SearchBarProps {
 }
 ```
 
----
+### Status Filter
 
-### 2. Status Filter
-
-Add pill buttons or a dropdown that filters results by player status.
+Pill buttons or a dropdown that narrows results.
 
 - Options: **All** (default) · **Online** · **Offline**
-- Must work together with the text search — both active at the same time
-- Call `handleStatusChange()` in `App.tsx` when the selection changes
+- Works together with the text search — both filters apply at the same time
+- Calls `handleStatusChange()` in `App.tsx` when selection changes
 
----
+### PlayerTable
 
-### 3. PlayerTable — `src/components/PlayerTable.tsx`
-
-Build a scrollable table of players.
+A scrollable table of players.
 
 - Columns: **Player ID** · **Name** · **Email** · **Balance** · **Status**
-- Status comes from `player.online` (boolean) — render as a coloured badge: green = Online, grey = Offline
-- When `loading` is `true`, show skeleton bars instead of rows (no stale data visible)
-- The table must have a **fixed height with a scrollable body** — and only render the rows **currently visible in the scroll area** (see Edge Cases below)
+- Status comes from `player.online` (boolean) — render as a coloured badge
+- When `loading` is `true`, show skeleton bars instead of rows
+- The table must have a **fixed height with a scrollable body**, and only render the rows **currently visible in the viewport** — see Food for Thought below
 
 ```typescript
 interface PlayerTableProps {
@@ -137,15 +134,13 @@ interface PlayerTableProps {
 }
 ```
 
----
+### Pagination
 
-### 4. Pagination — `src/components/Pagination.tsx`
+Prev/next controls with a result count.
 
-Build prev/next pagination controls.
-
-- Show: `"Showing X–Y of Z results"` (calculate X and Y from `currentPage` and `pageSize`)
-- Show: `"Page N of M"`
-- Previous button disabled on page 1 · Next button disabled on the last page
+- Show `"Showing X–Y of Z results"` — calculate X and Y from `currentPage` and `pageSize`
+- Show `"Page N of M"`
+- Previous disabled on page 1 · Next disabled on last page
 
 ```typescript
 interface PaginationProps {
@@ -158,131 +153,117 @@ interface PaginationProps {
 }
 ```
 
----
+### Error Handling
 
-### 5. Wire it all together in App.tsx
-
-- Uncomment the component imports at the top of `App.tsx`
-- Replace the TODO placeholder divs with your components and their props
-- Complete the debounce `useEffect` (the commented-out block shows exactly where)
-- Make `handleStatusChange` trigger a new search
-
----
-
-### 6. Error handling
-
-The fake API (`src/api/searchPlayers.ts`) randomly fails ~10% of requests.
+The fake API (`src/api/searchPlayers.ts`) randomly fails ~10% of the time to simulate real network errors.
 
 - Show a clear error message when a request fails
 - Show a **Retry** button that re-runs the last search
-- The user must never be left staring at a broken empty screen with no explanation
+- Never leave the user staring at an empty screen with no explanation
 
 ---
 
-## UI Library — ShadCN/UI
+## 🍽️ Food for Thought
 
-ShadCN is configured but **no components have been added yet**. Add what you need:
+These are the problems most developers don't notice until they break production. You don't need to solve all of them perfectly — but you must be able to **explain your approach** in the walkthrough.
 
-```bash
-npx shadcn@latest add button
-npx shadcn@latest add input
-npx shadcn@latest add table
-npx shadcn@latest add badge
-npx shadcn@latest add skeleton
-```
+### 1. The user types too fast
 
-Each command generates the component file in `src/components/ui/` — you then import and use it.
-Full list at [ui.shadcn.com/docs/components](https://ui.shadcn.com/docs/components).
+Your search input calls the API on every change. The user types `"john"` — that's 4 keystrokes, 4 API calls in under a second. Now multiply that by many concurrent users.
 
----
+Some questions to guide your thinking:
 
-## Edge Cases to Think Through
+- How can you wait until the user *stops* typing before firing a request?
+- If you set a 500ms timer on every keystroke, what should happen to the *previous* timer when a new key is pressed?
+- What React concept lets you run code when a value changes *and* clean up the previous run?
 
-These are real problems that appear in production. You don't need to solve all of them perfectly — but you must be able to **explain your approach** in the walkthrough.
+> 🔑 Search: `debounce useEffect`, `useEffect cleanup clearTimeout`
 
 ---
 
-### Edge Case 1 — Typing too fast (debounce)
+### 2. Slow responses arriving out of order
 
-**The problem:** The user types `"john"` — that's 4 keystrokes, 4 API calls fired within a second.
+The user types `"j"`, waits, then quickly types `"john"`. Two requests are now in flight. The `"j"` response is slower and arrives *after* the `"john"` response. The UI now shows the wrong data.
 
-**Think about:**
-- How can you wait until the user *stops* typing before firing the request?
-- If you set a 500ms timer on each keystroke, what do you do with the *previous* timer when a new key is pressed?
-- What React feature lets you run code when a value changes and **cancel the previous run**?
+Some questions to guide your thinking:
 
-> 🔑 Search: `debounce useEffect`, `useEffect cleanup setTimeout`, `clearTimeout React`
-
----
-
-### Edge Case 2 — Responses arriving out of order (race condition)
-
-**The problem:** The user types `"j"`, pauses, then types `"john"`. Two requests are in flight. The `"j"` response arrives *after* the `"john"` response. Your UI now shows the wrong results.
-
-**Think about:**
-- How do you know, when a response arrives, if it's still the *latest* one?
+- When a response arrives, how do you know it's still the *latest* one?
 - Is there a browser API that lets you cancel an in-flight request?
 - Could a simple counter or flag be enough to discard stale results?
 
-> 🔑 Search: `AbortController fetch`, `ignore flag useEffect async`, `stale closure React`
+> 🔑 Search: `AbortController fetch cancel`, `ignore flag async useEffect`
 
 ---
 
-### Edge Case 3 — Impossible UI states (state modeling)
+### 3. Three booleans that lie
 
-**The problem:** With three separate state variables — `loading`, `error`, `data` — some combinations are impossible but can still happen in code: loading *and* error at the same time, or showing the table while an error banner is also shown.
+You have `loading`, `error`, and `data` as separate state variables. Some combinations are impossible in reality — you can't be loading *and* have an error, or show data *and* an error banner at the same time. But code allows it, leading to subtle UI bugs.
 
-**Think about:**
-- Can you represent all these states as a *single* state variable with a `status` field?
-- How does TypeScript stop you from rendering the table when the status is `'error'`?
+Some questions to guide your thinking:
 
-> 🔑 Search: `discriminated union TypeScript`, `making impossible states impossible React`
+- Can you express all these states as a *single* variable with a `status` field?
+- How would TypeScript prevent you from rendering the table when status is `'error'`?
 
----
-
-### Edge Case 4 — Rendering 200+ rows (virtualization)
-
-**The problem:** The API can return 200 players. A real back office might have 10,000. Putting 10,000 `<tr>` elements in the DOM at once causes visible lag — layout, paint, and memory cost for every node.
-
-**Think about:**
-- The user sees ~10 rows at a time. Do the other 190 need to exist in the DOM?
-- What if you only rendered the rows *visible in the scroll area* and swapped them as the user scrolls?
-- How would you know which rows are visible from scroll position and row height?
-
-> 🔑 Search: `list virtualization React`, `@tanstack/react-virtual useVirtualizer`, `windowing`
+> 🔑 Search: `discriminated union TypeScript`, `making impossible states impossible`
 
 ---
 
-## Bonus Features
+### 4. Two hundred rows in the DOM
 
-If you finish early, these will set your submission apart:
+The API returns 200 players. A real back office might return 10,000. Every DOM node has a cost — layout, paint, memory. Rendering all rows at once causes visible lag on normal hardware.
 
-- ⭐ **Column sorting** — click a header to sort asc/desc
-- ⭐ **Empty state** — friendly message when search returns zero results
-- ⭐ **URL sync** — reflect query, status, and page as GET params (`?q=john&status=online&page=2`) so searches are shareable and survive a refresh
-- ⭐ **Session restore** — save the last query in `localStorage` and restore it on page load (the `STORAGE_KEY` constant in `App.tsx` is already there for you)
-- ⭐ **Dark / Light theme** — the `useTheme` hook in `App.tsx` is already wired up; add a toggle button in the header
-- ⭐ **Cancel stale requests** — use `AbortController` to cancel the previous request before firing a new one (solves Edge Case 2 properly)
+Some questions to guide your thinking:
+
+- The user sees roughly 10 rows at a time. Do the other 190 need to exist in the DOM?
+- What if you only rendered the rows *currently visible* in the scroll area and swapped them out as the user scrolls?
+- How would you know which rows are visible, given the scroll position and a fixed row height?
+
+> 🔑 Search: `list virtualization React`, `@tanstack/react-virtual useVirtualizer`
 
 ---
 
-## Git Guidelines
+## ⚠️ Coding Instructions
 
-Commit as you go — **don't save everything for the end.** We look at your commit history in the walkthrough.
+1. **Safety first.** Use TypeScript and be type-safe — no `any`, no type assertions unless genuinely necessary. Let the compiler protect you.
+2. **Use modern React** and write idiomatic React code. Functional components, hooks, clean composition.
+3. **Write clean, concise, modern code.** Prefer `const`, arrow functions, destructuring, optional chaining, `async/await`, and array methods over imperative loops.
+4. **Naming matters.** Use short, descriptive names for variables, functions, and files. This is one of the most important signals of good engineering judgment.
+5. **Use ShadCN/UI** for all UI components. It is already configured in this project. Add the components you need:
+   ```bash
+   npx shadcn@latest add button
+   npx shadcn@latest add input
+   npx shadcn@latest add table
+   npx shadcn@latest add badge
+   npx shadcn@latest add skeleton
+   ```
+   Browse all components at [ui.shadcn.com/docs/components](https://ui.shadcn.com/docs/components).
+6. **Do not use other component libraries** — no MUI, Chakra, Ant Design, etc.
+
+---
+
+## ⭐ Bonus Features
+
+If you finish early, these will make your submission stand out:
+
+- **Column sorting** — click a column header to sort ascending/descending
+- **Empty state** — a clear message when the search returns no results
+- **URL sync** — reflect query, status, and page as GET params so the search is shareable and survives a page refresh
+- **Session restore** — save the last search query in `localStorage` and restore it on page load (`STORAGE_KEY` is already in `App.tsx`)
+- **Dark / Light theme** — the `useTheme` hook in `App.tsx` is already wired up; add a toggle button in the header to use it
+- **Cancel stale requests** — use `AbortController` to cancel the previous request before firing a new one (the proper fix for Food for Thought #2)
+
+---
+
+## 🔧 Working with Git
+
+Commit as you go. **Don't save everything for one final commit** — we review your commit history in the walkthrough.
 
 ```bash
-# Good commits
+# Good commit messages
 git commit -m "Add SearchBar with debounced input and Go button"
-git commit -m "Implement PlayerTable with skeleton loading state"
-git commit -m "Add status filter and wire to search API"
-git commit -m "Fix pagination result count calculation"
-```
-
-```bash
-# Bad commits
-git commit -m "update"
-git commit -m "fix"
-git commit -m "final"
+git commit -m "Implement PlayerTable with virtualised rows and skeleton"
+git commit -m "Add Online/Offline status filter"
+git commit -m "Fix Pagination result count off-by-one"
 ```
 
 When you are done, push your branch:
@@ -293,72 +274,52 @@ git push origin feature/player-search-implementation
 
 ---
 
-## Deliverables Checklist
-
-Before submitting, verify:
+## 📦 Before You Submit
 
 - [ ] SearchBar, PlayerTable, and Pagination are implemented
 - [ ] Status filter works alongside text search
 - [ ] Loading skeleton shows while waiting for results
-- [ ] Error state with Retry button works
+- [ ] Errors show a message and a Retry button
 - [ ] App runs without errors (`npm run dev`)
-- [ ] 5–10 meaningful commits with descriptive messages
+- [ ] At least 5 meaningful commits with descriptive messages
 - [ ] Feature branch pushed to the repository
 - [ ] Your notes added below
 
 ---
 
-## Add Your Notes Here
+## 📝 Add Your Notes Here
 
 ### My Approach
 *How did you break down the problem? Where did you start?*
 
 ### Decisions I Made
-*What choices did you make and why? (component structure, state shape, libraries used)*
+*What choices did you make and why? (component structure, state shape, libraries)*
 
-### Edge Cases I Handled
-*Which of the 4 edge cases did you tackle? How did you solve each one?*
+### Edge Cases I Tackled
+*Which of the four Food for Thought problems did you address? How?*
 
 ### AI Usage
-*Be honest — what did you use AI for? What did you write yourself? What did you modify from AI output?*
+*Be honest — what did you use AI for? What did you write yourself? What did you change from AI output?*
 
 ### What I'd Improve With More Time
-*What would you refactor, add, or change with another hour?*
+*What would you refactor or add with another hour?*
 
 ---
 
-## Code Walkthrough
+## 🎓 Code Walkthrough
 
-After you submit we will schedule a 15-minute screen share. Be prepared to:
+After you submit we will schedule a short screen share. Be ready to:
 
 1. Walk through your commit history and explain your progression
-2. Explain a specific component — we'll pick one
-3. **Debounce:** show us what happens in the browser if you remove the `clearTimeout` cleanup. Can you make it break live?
-4. **Loading state:** what does the user see during the 600ms API delay? Can stale data appear?
-5. **Error handling:** the API fails ~10% of the time — trigger one live and walk us through the recovery flow
-6. **Virtualization:** open DevTools Elements panel and scroll the table — how many `<tr>` elements are in the DOM? What would change without virtualization?
-7. **State modeling:** can your app show an error banner *and* a data table at the same time? Should it? How does your code prevent or allow it?
+2. Pick a component and explain your implementation decisions
+3. **Debounce:** show what happens in the browser if you remove the cleanup. Can you make it break live?
+4. **Loading state:** what does the user see during the API delay? Can stale data ever appear?
+5. **Error handling:** trigger a real error live (the API fails ~10% of calls) and walk us through the recovery flow
+6. **Virtualization:** open DevTools and inspect the table while scrolling — how many `<tr>` elements are in the DOM?
+7. **State modeling:** can your app show an error banner *and* a data table at the same time? Should it? How does your code prevent or allow that?
 8. **Live challenge:** we'll give you one small feature to add while we watch (15 min)
 9. **AI usage:** walk us through what you generated vs. wrote yourself
 
----
+If you have any questions during the task, don't hesitate to reach out. It's always better to ask than to go in the wrong direction — that's true in this exercise as much as it is in real software development. 🙂
 
-## Time Guide
-
-| Task | Suggested time |
-|---|---|
-| SearchBar + debounce | 30 min |
-| Status filter | 15 min |
-| PlayerTable + skeleton + virtualization | 60 min |
-| Error handling | 15 min |
-| Pagination | 20 min |
-| Wiring + testing + cleanup | 30 min |
-| **Total** | **~3 hours** |
-
-Working code beats perfect code. Get something functional first, then improve it.
-
----
-
-**Good luck — we're excited to see what you build.**
-
-— RealPlay Engineering Team
+**Good luck — we're excited to see what you build!**
