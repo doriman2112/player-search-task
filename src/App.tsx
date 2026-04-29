@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Sun, Moon } from 'lucide-react';
 import { searchPlayers, SearchResult } from '@/api/searchPlayers';
+import type { Player } from '@/types/player';
+import { SearchBar } from '@/components/SearchBar';
+import { StatusFilter } from '@/components/StatusFilter';
+import { PlayerTable } from '@/components/PlayerTable';
+import { Pagination } from '@/components/Pagination';
 // NOTE: The theme toggle button below uses a plain <button> until you add ShadCN.
 // Once you run `npx shadcn@latest add button` you can swap it for <Button>.
 // TODO: Once you create your components, import them here:
@@ -30,32 +35,68 @@ function App() {
   const { dark, toggle } = useTheme();
 
   // Search state
-  const [query, setQuery] = useState<string>(
-    () => localStorage.getItem(STORAGE_KEY) ?? ''
-  );
-  const [status, setStatus] = useState<'all' | 'online' | 'offline'>('all');
-  const [currentPage, setCurrentPage] = useState(1);
+  // --- Read from URL ---
+  const getInitialState = () => {
+    const params = new URLSearchParams(window.location.search);
+  
+    // Getting the query from the URL and the localStorage
+    const queryFromUrl = params.get("q");
+    const queryFromStorage = localStorage.getItem(STORAGE_KEY);
+  
+    return {
+      query: queryFromUrl ?? queryFromStorage ?? "",
+      status: (params.get("status") as "all" | "online" | "offline") || "all",
+      page: Number(params.get("page")) || 1,
+    };
+  };
+
+  const initial = getInitialState();
+  // --- State ---
+  const [query, setQuery] = useState<string>(initial.query);
+  const [status, setStatus] = useState<'all' | 'online' | 'offline'>(initial.status);
+  const [currentPage, setCurrentPage] = useState<number>(initial.page);
+  const [sortBy, setSortBy] = useState<keyof Player | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (column: keyof Player) => {
+    if (sortBy === column) {
+      setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(column);
+      setSortDirection('asc');
+    }
+  };
 
   // Async result state
   const [result, setResult] = useState<SearchResult>({ players: [], total: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // TODO: The search input should NOT fire a request on every keystroke.
-  // Implement debouncing so the API is only called after the user has
-  // stopped typing for ~500ms. You can use a plain useEffect + setTimeout,
-  // or a utility like `use-debounce`.
-  //
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     runSearch();
-  //   }, 500);
-  //   return () => clearTimeout(timer); // cleanup cancels the previous timer
-  // }, [query, status, currentPage]);
+  // Updating the URL when the query, status, or page changes(state)
+  useEffect(() => {
+    const params = new URLSearchParams();
+  
+    if (query) params.set("q", query);
+    if (status !== "all") params.set("status", status);
+    if (currentPage > 1) params.set("page", String(currentPage));
+  
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState({}, "", newUrl);
+  }, [query, status, currentPage]);
+
+
+  // Adding Debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      runSearch(1); // Added the page parameter to the runSearch function to ensure the search is run on the first page
+    }, 500);
+    return () => clearTimeout(timer); // cleanup cancels the previous timer
+  }, [query, status]); //removed Current Page because it is not needed for debounce , bad for pagination
 
   const runSearch = async (page = currentPage) => {
     setLoading(true);
     setError(null);
+  
     try {
       const data = await searchPlayers({
         query,
@@ -63,34 +104,49 @@ function App() {
         pageSize: PLAYERS_PER_PAGE,
         status,
       });
+  
+      const totalPages = Math.max(1, Math.ceil(data.total / PLAYERS_PER_PAGE));
+  
+      // ✅ Clamp page safely BEFORE rendering anything
+      const safePage = Math.min(Math.max(page, 1), totalPages);
+  
+      // 🔥 If page is invalid → fix immediately and retry
+      if (safePage !== page) {
+        setCurrentPage(safePage);
+        return runSearch(safePage);
+      }
+  
+      // ✅ Only now we set result
       setResult(data);
       localStorage.setItem(STORAGE_KEY, query);
+  
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
   };
-
   // Run search on mount with the restored query
   useEffect(() => {
-    runSearch(1);
+    runSearch(initial.page);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setCurrentPage(1);
-    // TODO: With debounce wired up via useEffect this explicit call may not
-    // be needed, but keeping a "Go" button that calls runSearch() directly
-    // is good UX for users who want instant results.
+  };
+
+  // Run search immediately (for pressing the Go button)
+  const handleImmediateSearch = (searchQuery: string) => {
+    setQuery(searchQuery);
+    setCurrentPage(1);
     runSearch(1);
   };
 
   const handleStatusChange = (newStatus: 'all' | 'online' | 'offline') => {
     setStatus(newStatus);
     setCurrentPage(1);
-    // TODO: trigger search with updated status
   };
 
   const handleNext = () => {
@@ -106,6 +162,23 @@ function App() {
   };
 
   const totalPages = Math.max(1, Math.ceil(result.total / PLAYERS_PER_PAGE));
+
+  const sortedPlayers = [...result.players];
+
+  if (sortBy) {
+    sortedPlayers.sort((a, b) => {
+      const aVal = a[sortBy];
+      const bVal = b[sortBy];
+  
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+  
+      return sortDirection === 'asc'
+        ? String(aVal).localeCompare(String(bVal))
+        : String(bVal).localeCompare(String(aVal));
+    });
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -124,29 +197,45 @@ function App() {
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-4">
 
-        {/* TODO: Replace with <SearchBar> and a status filter (All / Online / Offline) */}
-        <div className="p-4 border border-dashed border-border rounded text-muted-foreground text-sm space-y-1">
-          <p>TODO: &lt;SearchBar onSearch={'{handleSearch}'} initialValue={'{query}'} /&gt;</p>
-          <p>TODO: Status filter — &lt;select&gt; or &lt;Tabs&gt; that calls handleStatusChange()</p>
-        </div>
+        <SearchBar 
+        onSearch={handleSearch}
+        onSubmit={handleImmediateSearch}
+        initialValue={query} 
+        />
 
-        {/* TODO: Replace with <PlayerTable players={result.players} /> */}
-        {/* Also handle the loading and error states below */}
-        {error && (
-          <div className="p-4 border border-destructive/40 bg-destructive/10 rounded text-destructive text-sm">
-            {error} <button className="underline ml-2" onClick={() => runSearch()}>Retry</button>
-          </div>
-        )}
-        <div className="p-4 border border-dashed border-border rounded text-muted-foreground text-sm space-y-1">
-          <p>TODO: &lt;PlayerTable players={'{result.players}'} loading={'{loading}'} /&gt;</p>
-          <p>Hint: show a loading skeleton or spinner when loading=true</p>
-          <p>Currently: {loading ? 'loading…' : `${result.total} results`}</p>
-        </div>
+        <StatusFilter value={status} onChange={handleStatusChange} />
 
-        {/* TODO: Replace with <Pagination> */}
-        <div className="p-4 border border-dashed border-border rounded text-muted-foreground text-sm">
-          <p>TODO: &lt;Pagination currentPage={'{currentPage}'} totalPages={'{totalPages}'} totalResults={'{result.total}'} pageSize={'{PLAYERS_PER_PAGE}'} onNext={'{handleNext}'} onPrev={'{handlePrev}'} /&gt;</p>
+        {error ? (
+        <div className="p-4 border border-destructive/40 bg-destructive/10 rounded text-destructive text-sm">
+          {error}
+          <button
+            className="underline ml-2"
+            onClick={() => runSearch(currentPage)}
+          >
+            Retry
+          </button>
         </div>
+      ) : (
+        <>
+          <PlayerTable
+            players={sortedPlayers}
+            loading={loading}
+            onSort={handleSort}
+            sortBy={sortBy}
+            sortDirection={sortDirection}
+          />
+
+          <Pagination 
+            currentPage={currentPage} 
+            totalPages={totalPages} 
+            totalResults={result.total} 
+            pageSize={PLAYERS_PER_PAGE} 
+            onNext={handleNext} 
+            onPrev={handlePrev} 
+          />
+        </>
+      )}
+
       </main>
     </div>
   );
