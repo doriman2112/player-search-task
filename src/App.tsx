@@ -77,7 +77,10 @@ function App() {
     if (status !== "all") params.set("status", status);
     if (currentPage > 1) params.set("page", String(currentPage));
   
-    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    const search = params.toString();
+    const newUrl = search
+      ? `${window.location.pathname}?${search}`
+      : window.location.pathname;
     window.history.replaceState({}, "", newUrl);
   }, [query, status, currentPage]);
 
