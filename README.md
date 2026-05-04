@@ -186,10 +186,10 @@ Reflect the current search state in the URL so that searches are shareable and s
 
 ### Session Restore
 
-Save the last search query in `localStorage` so it is restored when the user reopens the tab.
+Save the last search query in `sessionStorage` so it is restored when the user refreshes the same tab. Unlike `localStorage`, `sessionStorage` is not shared across tabs, so a new tab does not inherit another tab’s last query.
 
-- On page load: if there are no URL params, restore the last query from `localStorage`
-- On every search: update `localStorage` with the latest query
+- On page load: if there are no URL params, restore the last query from `sessionStorage`
+- On every search: update `sessionStorage` with the latest query
 
 ### Dark / Light Theme
 
@@ -317,7 +317,7 @@ git push origin feature/player-search-implementation
 - [ ] Empty state shows when search returns no results
 - [ ] Layout is responsive (mobile + desktop)
 - [ ] Search state is reflected in the URL (`?q=&status=&page=`)
-- [ ] Last query is saved and restored from `localStorage`
+- [ ] Last query is saved and restored from `sessionStorage` (same tab / refresh only)
 - [ ] Dark / Light theme toggle works in the header
 - [ ] App runs without errors (`npm run dev`)
 - [ ] At least 5 meaningful commits with descriptive messages

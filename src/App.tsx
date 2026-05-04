@@ -39,9 +39,9 @@ function App() {
   const getInitialState = () => {
     const params = new URLSearchParams(window.location.search);
   
-    // Getting the query from the URL and the localStorage
+    // Getting the query from the URL and sessionStorage (tab-scoped; avoids cross-tab leak)
     const queryFromUrl = params.get("q");
-    const queryFromStorage = localStorage.getItem(STORAGE_KEY);
+    const queryFromStorage = sessionStorage.getItem(STORAGE_KEY);
   
     return {
       query: queryFromUrl ?? queryFromStorage ?? "",
@@ -118,7 +118,7 @@ function App() {
   
       // ✅ Only now we set result
       setResult(data);
-      localStorage.setItem(STORAGE_KEY, query);
+      sessionStorage.setItem(STORAGE_KEY, query);
   
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
