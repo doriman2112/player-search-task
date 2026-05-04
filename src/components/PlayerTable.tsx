@@ -29,6 +29,14 @@ const COLUMNS: ReadonlyArray<{ key: keyof Player; label: string }> = [
 
 const SKELETON_ROWS = 10;
 
+/**
+ * README: cap table height and scroll rows inside one box.
+ * We scroll the whole `<table>` (not `tbody { display: block }`) so thead + tbody share one column grid — the block-tbody
+ * pattern breaks alignment between header and body cells. Sticky thead keeps headers visible while body rows scroll.
+ */
+const tableViewport =
+  "max-h-[min(480px,70vh)] overflow-auto [scrollbar-gutter:stable]";
+
 export const PlayerTable = ({
   players,
   loading,
@@ -39,16 +47,17 @@ export const PlayerTable = ({
   if (loading && !players.length) {
     return (
       <div className="rounded-md border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              {COLUMNS.map(({ key, label }) => (
-                <TableHead key={key} className="text-muted-foreground">
-                  {label}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
+        <div className={tableViewport}>
+          <Table>
+            <TableHeader>
+              <TableRow className="sticky top-0 z-10 border-b border-border bg-card shadow-sm hover:bg-transparent">
+                {COLUMNS.map(({ key, label }) => (
+                  <TableHead key={key} className="text-muted-foreground">
+                    {label}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
           <TableBody>
             {Array.from({ length: SKELETON_ROWS }, (_, row) => (
               <TableRow key={row} className="hover:bg-transparent">
@@ -60,7 +69,8 @@ export const PlayerTable = ({
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       </div>
     );
   }
@@ -77,7 +87,7 @@ export const PlayerTable = ({
     <div className="relative rounded-md border bg-card">
       {loading ? (
         <div
-          className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-background/70 backdrop-blur-[1px]"
+          className="absolute inset-0 z-20 flex items-center justify-center rounded-md bg-background/70 backdrop-blur-[1px]"
           aria-live="polite"
           aria-busy="true"
         >
@@ -87,43 +97,44 @@ export const PlayerTable = ({
           </div>
         </div>
       ) : null}
-      <Table
-        className={cn(loading && "opacity-50 pointer-events-none")}
-        aria-busy={loading}
-      >
-        <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            {COLUMNS.map(({ key, label }) => {
-              const active = sortBy === key;
-              return (
-                <TableHead
-                  key={key}
-                  className="text-muted-foreground"
-                  aria-sort={
-                    active
-                      ? sortDirection === "asc"
-                        ? "ascending"
-                        : "descending"
-                      : undefined
-                  }
-                >
-                  <button
-                    type="button"
-                    onClick={() => onSort(key)}
-                    className="inline-flex w-full items-center gap-1.5 rounded px-1 py-1 text-left font-medium text-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+      <div className={tableViewport}>
+        <Table
+          className={cn(loading && "opacity-50 pointer-events-none")}
+          aria-busy={loading}
+        >
+          <TableHeader>
+            <TableRow className="sticky top-0 z-10 border-b border-border bg-card shadow-sm hover:bg-transparent">
+              {COLUMNS.map(({ key, label }) => {
+                const active = sortBy === key;
+                return (
+                  <TableHead
+                    key={key}
+                    className="text-muted-foreground"
+                    aria-sort={
+                      active
+                        ? sortDirection === "asc"
+                          ? "ascending"
+                          : "descending"
+                        : undefined
+                    }
                   >
-                    <span>{label}</span>
-                    {active ? (
-                      <span className="tabular-nums text-foreground" aria-hidden>
-                        {sortDirection === "asc" ? "▲" : "▼"}
-                      </span>
-                    ) : null}
-                  </button>
-                </TableHead>
-              );
-            })}
-          </TableRow>
-        </TableHeader>
+                    <button
+                      type="button"
+                      onClick={() => onSort(key)}
+                      className="inline-flex w-full items-center gap-1.5 rounded px-1 py-1 text-left font-medium text-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+                    >
+                      <span>{label}</span>
+                      {active ? (
+                        <span className="tabular-nums text-foreground" aria-hidden>
+                          {sortDirection === "asc" ? "▲" : "▼"}
+                        </span>
+                      ) : null}
+                    </button>
+                  </TableHead>
+                );
+              })}
+            </TableRow>
+          </TableHeader>
         <TableBody>
           {players.map((player) => (
             <TableRow key={player.playerId}>
@@ -135,7 +146,8 @@ export const PlayerTable = ({
             </TableRow>
           ))}
         </TableBody>
-      </Table>
+        </Table>
+      </div>
     </div>
   );
 };
