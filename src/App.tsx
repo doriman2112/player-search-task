@@ -66,6 +66,7 @@ function App() {
 
   // Async result state
   const [result, setResult] = useState<SearchResult>({ players: [], total: 0 });
+  /** `true` on first paint so the table never shows an empty state before the mount search runs. */
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const searchAc = useRef<AbortController | null>(null);

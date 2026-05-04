@@ -75,7 +75,8 @@ export const PlayerTable = ({
     );
   }
 
-  if (!players.length) {
+  /* Only after loading finished — avoids "no results" flash if parent ever renders loading=false with empty rows (e.g. before first fetch). */
+  if (!loading && !players.length) {
     return (
       <div className="rounded-md border border-dashed bg-muted/30 px-6 py-12 text-center text-sm text-muted-foreground">
         No results found, Maybe try a different search? :P
