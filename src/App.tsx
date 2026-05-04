@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Sun, Moon } from 'lucide-react';
 import { searchPlayers, SearchResult } from '@/api/searchPlayers';
 import type { Player } from '@/types/player';
@@ -15,6 +15,20 @@ import { Pagination } from '@/components/Pagination';
 
 const PLAYERS_PER_PAGE = 10;
 const STORAGE_KEY = 'player-search-query';
+
+/** Snapshot URL + sessionStorage once per mount (used for initial React state only). */
+const getInitialState = () => {
+  const params = new URLSearchParams(window.location.search);
+
+  const queryFromUrl = params.get('q');
+  const queryFromStorage = sessionStorage.getItem(STORAGE_KEY);
+
+  return {
+    query: queryFromUrl ?? queryFromStorage ?? '',
+    status: (params.get('status') as 'all' | 'online' | 'offline') || 'all',
+    page: Number(params.get('page')) || 1,
+  };
+};
 
 // --- Theme hook ---
 function useTheme() {
@@ -34,24 +48,7 @@ function useTheme() {
 function App() {
   const { dark, toggle } = useTheme();
 
-  // Search state
-  // --- Read from URL ---
-  const getInitialState = () => {
-    const params = new URLSearchParams(window.location.search);
-  
-    // Getting the query from the URL and sessionStorage (tab-scoped; avoids cross-tab leak)
-    const queryFromUrl = params.get("q");
-    const queryFromStorage = sessionStorage.getItem(STORAGE_KEY);
-  
-    return {
-      query: queryFromUrl ?? queryFromStorage ?? "",
-      status: (params.get("status") as "all" | "online" | "offline") || "all",
-      page: Number(params.get("page")) || 1,
-    };
-  };
-
-  const initial = getInitialState();
-  // --- State ---
+  const initial = useMemo(() => getInitialState(), []);
   const [query, setQuery] = useState<string>(initial.query);
   const [status, setStatus] = useState<'all' | 'online' | 'offline'>(initial.status);
   const [currentPage, setCurrentPage] = useState<number>(initial.page);
@@ -128,7 +125,7 @@ function App() {
   };
   // Run search on mount with the restored query
   useEffect(() => {
-    runSearch(initial.page);
+    runSearch(currentPage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
