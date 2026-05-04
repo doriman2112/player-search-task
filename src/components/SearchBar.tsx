@@ -15,8 +15,10 @@ export const SearchBar = ({ onSearch, onSubmit, initialValue }: SearchBarProps) 
     };
 
     const handleSubmit = () => {
-        if(!query) return;
-        onSubmit(query);
+        const trimmed = query.trim();
+        if (!trimmed) return;
+        setQuery(trimmed);
+        onSubmit(trimmed);
     };
 
     return (
@@ -28,7 +30,7 @@ export const SearchBar = ({ onSearch, onSubmit, initialValue }: SearchBarProps) 
             onChange={(e) => handleChange(e.target.value)}
             placeholder="player_id, email, phone"
             />
-            <button className="p-2 border rounded" onClick={handleSubmit} disabled={!query}>Go</button>
+            <button className="p-2 border rounded" onClick={handleSubmit} disabled={!query.trim()}>Go</button>
         </div>
     )
 }
