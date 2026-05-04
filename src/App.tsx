@@ -66,7 +66,7 @@ function App() {
 
   // Async result state
   const [result, setResult] = useState<SearchResult>({ players: [], total: 0 });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Updating the URL when the query, status, or page changes(state)
