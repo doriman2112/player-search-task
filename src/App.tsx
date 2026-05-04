@@ -93,33 +93,31 @@ function App() {
     return () => clearTimeout(timer); // cleanup cancels the previous timer
   }, [query, status]); //removed Current Page because it is not needed for debounce , bad for pagination
 
-  const runSearch = async (page = currentPage) => {
+  const runSearch = async (page: number = currentPage, overrideQuery?: string) => {
+    const effectiveQuery = overrideQuery ?? query;
+
     setLoading(true);
     setError(null);
-  
+
     try {
       const data = await searchPlayers({
-        query,
+        query: effectiveQuery,
         page,
         pageSize: PLAYERS_PER_PAGE,
         status,
       });
-  
+
       const totalPages = Math.max(1, Math.ceil(data.total / PLAYERS_PER_PAGE));
-  
-      // ✅ Clamp page safely BEFORE rendering anything
+
       const safePage = Math.min(Math.max(page, 1), totalPages);
-  
-      // 🔥 If page is invalid → fix immediately and retry
+
       if (safePage !== page) {
         setCurrentPage(safePage);
-        return runSearch(safePage);
+        return runSearch(safePage, effectiveQuery);
       }
-  
-      // ✅ Only now we set result
+
       setResult(data);
-      sessionStorage.setItem(STORAGE_KEY, query);
-  
+      sessionStorage.setItem(STORAGE_KEY, effectiveQuery);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {
@@ -141,7 +139,7 @@ function App() {
   const handleImmediateSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setCurrentPage(1);
-    runSearch(1);
+    void runSearch(1, searchQuery);
   };
 
   const handleStatusChange = (newStatus: 'all' | 'online' | 'offline') => {
