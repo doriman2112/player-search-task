@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Sun, Moon } from 'lucide-react';
 import { searchPlayers, SearchResult } from '@/api/searchPlayers';
 import type { Player } from '@/types/player';
@@ -68,6 +68,9 @@ function App() {
   const [result, setResult] = useState<SearchResult>({ players: [], total: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const searchAc = useRef<AbortController | null>(null);
+
+  useEffect(() => () => searchAc.current?.abort(), []);
 
   // Updating the URL when the query, status, or page changes(state)
   useEffect(() => {
@@ -95,33 +98,35 @@ function App() {
 
   const runSearch = async (page: number = currentPage, overrideQuery?: string) => {
     const effectiveQuery = overrideQuery ?? query;
+    searchAc.current?.abort();
+    const ac = new AbortController();
+    searchAc.current = ac;
 
     setLoading(true);
     setError(null);
-
     try {
       const data = await searchPlayers({
         query: effectiveQuery,
         page,
         pageSize: PLAYERS_PER_PAGE,
         status,
+        signal: ac.signal,
       });
+      if (ac.signal.aborted) return;
 
       const totalPages = Math.max(1, Math.ceil(data.total / PLAYERS_PER_PAGE));
-
       const safePage = Math.min(Math.max(page, 1), totalPages);
-
       if (safePage !== page) {
         setCurrentPage(safePage);
         return runSearch(safePage, effectiveQuery);
       }
-
       setResult(data);
       sessionStorage.setItem(STORAGE_KEY, effectiveQuery);
     } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {
-      setLoading(false);
+      if (!ac.signal.aborted) setLoading(false);
     }
   };
   // Run search on mount with the restored query
