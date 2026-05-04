@@ -1,4 +1,15 @@
+import { Loader2 } from "lucide-react";
 import type { Player } from "@/types/player";
+import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface PlayerTableProps {
   players: Player[];
@@ -16,6 +27,8 @@ const COLUMNS: ReadonlyArray<{ key: keyof Player; label: string }> = [
   { key: "online", label: "Status" },
 ];
 
+const SKELETON_ROWS = 10;
+
 export const PlayerTable = ({
   players,
   loading,
@@ -23,26 +36,69 @@ export const PlayerTable = ({
   sortBy,
   sortDirection,
 }: PlayerTableProps) => {
-  if (loading) {
-    return <div>Loading...</div>;
+  if (loading && !players.length) {
+    return (
+      <div className="rounded-md border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              {COLUMNS.map(({ key, label }) => (
+                <TableHead key={key} className="text-muted-foreground">
+                  {label}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: SKELETON_ROWS }, (_, row) => (
+              <TableRow key={row} className="hover:bg-transparent">
+                {COLUMNS.map(({ key }) => (
+                  <TableCell key={key}>
+                    <Skeleton className="h-5 w-full max-w-[8rem]" />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
   }
 
   if (!players.length) {
-    return <div>No results found, Maybe try a different search? :P</div>;
+    return (
+      <div className="rounded-md border border-dashed bg-muted/30 px-6 py-12 text-center text-sm text-muted-foreground">
+        No results found, Maybe try a different search? :P
+      </div>
+    );
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full">
-        <thead>
-          <tr>
+    <div className="relative rounded-md border bg-card">
+      {loading ? (
+        <div
+          className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-background/70 backdrop-blur-[1px]"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <div className="flex items-center gap-2 rounded-md border bg-card px-3 py-2 shadow-sm">
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-hidden />
+            <span className="text-sm text-muted-foreground">Loading…</span>
+          </div>
+        </div>
+      ) : null}
+      <Table
+        className={cn(loading && "opacity-50 pointer-events-none")}
+        aria-busy={loading}
+      >
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
             {COLUMNS.map(({ key, label }) => {
               const active = sortBy === key;
               return (
-                <th
+                <TableHead
                   key={key}
-                  scope="col"
-                  className="text-left text-sm font-medium text-muted-foreground border-b border-border"
+                  className="text-muted-foreground"
                   aria-sort={
                     active
                       ? sortDirection === "asc"
@@ -54,32 +110,32 @@ export const PlayerTable = ({
                   <button
                     type="button"
                     onClick={() => onSort(key)}
-                    className="inline-flex items-center gap-1.5 py-2 pr-2 -ml-1 pl-1 rounded hover:bg-muted/80 hover:text-foreground transition-colors w-full text-left font-medium"
+                    className="inline-flex w-full items-center gap-1.5 rounded px-1 py-1 text-left font-medium text-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
                   >
                     <span>{label}</span>
                     {active ? (
-                      <span className="text-foreground tabular-nums" aria-hidden>
+                      <span className="tabular-nums text-foreground" aria-hidden>
                         {sortDirection === "asc" ? "▲" : "▼"}
                       </span>
                     ) : null}
                   </button>
-                </th>
+                </TableHead>
               );
             })}
-          </tr>
-        </thead>
-        <tbody>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {players.map((player) => (
-            <tr key={player.playerId}>
-              <td>{player.playerId}</td>
-              <td>{player.name}</td>
-              <td>{player.email}</td>
-              <td>${player.balance.toFixed(2)}</td>
-              <td>{player.online ? "🟢" : "🔴"}</td>
-            </tr>
+            <TableRow key={player.playerId}>
+              <TableCell className="font-mono text-xs">{player.playerId}</TableCell>
+              <TableCell>{player.name}</TableCell>
+              <TableCell>{player.email}</TableCell>
+              <TableCell>${player.balance.toFixed(2)}</TableCell>
+              <TableCell>{player.online ? "🟢" : "🔴"}</TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 };
