@@ -10,6 +10,18 @@ import { Pagination } from '@/components/Pagination';
 const PLAYERS_PER_PAGE = 10;
 const STORAGE_KEY = 'player-search-query';
 
+const VALID_STATUSES = ['all', 'online', 'offline'] as const;
+type StatusFilter = (typeof VALID_STATUSES)[number];
+
+const isStatusFilter = (s: string): s is StatusFilter =>
+  (VALID_STATUSES as readonly string[]).includes(s);
+
+/** URL `status` must match allowed values; unknown strings fall back to `all`. */
+const parseStatusParam = (value: string | null): StatusFilter => {
+  const raw = value ?? 'all';
+  return isStatusFilter(raw) ? raw : 'all';
+};
+
 /**
  * Snapshot URL + sessionStorage once per mount (used for initial React state only).
  * README: restore stored query only when the URL has no search params at all — if `?status=online`
@@ -24,7 +36,7 @@ const getInitialState = () => {
 
   return {
     query: queryFromUrl ?? (hasUrlParams ? '' : (queryFromStorage ?? '')),
-    status: (params.get('status') as 'all' | 'online' | 'offline') || 'all',
+    status: parseStatusParam(params.get('status')),
     page: Number(params.get('page')) || 1,
   };
 };
