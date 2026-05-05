@@ -80,6 +80,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const searchAc = useRef<AbortController | null>(null);
+  /** First debounce effect run is skipped so mount `runSearch` is the only initial fetch. */
+  const isMounted = useRef(false);
 
   useEffect(() => () => searchAc.current?.abort(), []);
 
@@ -99,13 +101,17 @@ function App() {
   }, [query, status, currentPage]);
 
 
-  // Adding Debounce
+  // Debounce query/status — skip first effect so it does not schedule runSearch(1) on top of mount runSearch
   useEffect(() => {
+    if (!isMounted.current) {
+      isMounted.current = true;
+      return;
+    }
     const timer = setTimeout(() => {
-      runSearch(1); // Added the page parameter to the runSearch function to ensure the search is run on the first page
+      void runSearch(1);
     }, 500);
-    return () => clearTimeout(timer); // cleanup cancels the previous timer
-  }, [query, status]); //removed Current Page because it is not needed for debounce , bad for pagination
+    return () => clearTimeout(timer);
+  }, [query, status]);
 
   const runSearch = async (page: number = currentPage, overrideQuery?: string) => {
     const effectiveQuery = overrideQuery ?? query;
