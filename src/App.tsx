@@ -226,17 +226,17 @@ function App() {
         <StatusFilter value={status} onChange={handleStatusChange} />
 
         {error ? (
-        <div className="p-4 border border-destructive/40 bg-destructive/10 rounded text-destructive text-sm">
-          {error}
-          <button
-            className="underline ml-2"
-            onClick={() => runSearch(currentPage)}
-          >
-            Retry
-          </button>
-        </div>
-      ) : (
-        <>
+          <div className="p-4 border border-destructive/40 bg-destructive/10 rounded text-destructive text-sm">
+            {error}
+            <button
+              type="button"
+              className="underline ml-2"
+              onClick={() => void runSearch(currentPage)}
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
           <PlayerTable
             players={sortedPlayers}
             loading={loading}
@@ -244,17 +244,16 @@ function App() {
             sortBy={sortBy}
             sortDirection={sortDirection}
           />
+        )}
 
-          <Pagination 
-            currentPage={currentPage} 
-            totalPages={totalPages} 
-            totalResults={result.total} 
-            pageSize={PLAYERS_PER_PAGE} 
-            onNext={handleNext} 
-            onPrev={handlePrev} 
-          />
-        </>
-      )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalResults={result.total}
+          pageSize={PLAYERS_PER_PAGE}
+          onNext={handleNext}
+          onPrev={handlePrev}
+        />
 
       </main>
     </div>
