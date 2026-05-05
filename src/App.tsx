@@ -6,12 +6,6 @@ import { SearchBar } from '@/components/SearchBar';
 import { StatusFilter } from '@/components/StatusFilter';
 import { PlayerTable } from '@/components/PlayerTable';
 import { Pagination } from '@/components/Pagination';
-// NOTE: The theme toggle button below uses a plain <button> until you add ShadCN.
-// Once you run `npx shadcn@latest add button` you can swap it for <Button>.
-// TODO: Once you create your components, import them here:
-// import SearchBar from '@/components/SearchBar';
-// import PlayerTable from '@/components/PlayerTable';
-// import Pagination from '@/components/Pagination';
 
 const PLAYERS_PER_PAGE = 10;
 const STORAGE_KEY = 'player-search-query';
