@@ -1,36 +1,52 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface SearchBarProps {
-    onSearch: (query: string) => void;
-    onSubmit: (query: string) => void;
-    initialValue?: string;
-  }
+  onSearch: (query: string) => void;
+  onSubmit: (query: string) => void;
+  /** Mirrors parent `query`; kept in sync when the parent updates (e.g. clear / URL restore). */
+  initialValue?: string;
+}
 
 export const SearchBar = ({ onSearch, onSubmit, initialValue }: SearchBarProps) => {
-    const [query, setQuery] = useState(initialValue || '');
+  const [query, setQuery] = useState(() => initialValue ?? "");
 
-    const handleChange = (value: string) => {
-        setQuery(value);
-        onSearch(value);
-    };
+  useEffect(() => {
+    setQuery(initialValue ?? "");
+  }, [initialValue]);
 
-    const handleSubmit = () => {
-        const trimmed = query.trim();
-        if (!trimmed) return;
-        setQuery(trimmed);
-        onSubmit(trimmed);
-    };
+  const handleChange = (value: string) => {
+    setQuery(value);
+    onSearch(value);
+  };
 
-    return (
-        <div className="flex flex-col sm:flex-row gap-2">
-            <input
-            className="flex-1 border border-gray-300 rounded"
-            type="text"
-            value={query}
-            onChange={(e) => handleChange(e.target.value)}
-            placeholder="player_id, email, phone"
-            />
-            <button className="p-2 border rounded" onClick={handleSubmit} disabled={!query.trim()}>Go</button>
-        </div>
-    )
-}
+  const handleSubmit = () => {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    setQuery(trimmed);
+    onSubmit(trimmed);
+  };
+
+  return (
+    <form
+      className="flex flex-col gap-2 sm:flex-row sm:items-center"
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit();
+      }}
+    >
+      <Input
+        className="min-w-0 flex-1"
+        type="search"
+        value={query}
+        onChange={(e) => handleChange(e.target.value)}
+        placeholder="player_id, email, phone"
+        enterKeyHint="search"
+      />
+      <Button type="submit" disabled={!query.trim()}>
+        Go
+      </Button>
+    </form>
+  );
+};
