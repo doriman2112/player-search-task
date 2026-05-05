@@ -1,15 +1,45 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Sun, Moon } from 'lucide-react';
 import { searchPlayers, SearchResult } from '@/api/searchPlayers';
-// NOTE: The theme toggle button below uses a plain <button> until you add ShadCN.
-// Once you run `npx shadcn@latest add button` you can swap it for <Button>.
-// TODO: Once you create your components, import them here:
-// import SearchBar from '@/components/SearchBar';
-// import PlayerTable from '@/components/PlayerTable';
-// import Pagination from '@/components/Pagination';
+import type { Player } from '@/types/player';
+import { SearchBar } from '@/components/SearchBar';
+import { StatusFilter } from '@/components/StatusFilter';
+import { PlayerTable } from '@/components/PlayerTable';
+import { Pagination } from '@/components/Pagination';
 
 const PLAYERS_PER_PAGE = 10;
 const STORAGE_KEY = 'player-search-query';
+
+const VALID_STATUSES = ['all', 'online', 'offline'] as const;
+type StatusFilter = (typeof VALID_STATUSES)[number];
+
+const isStatusFilter = (s: string): s is StatusFilter =>
+  (VALID_STATUSES as readonly string[]).includes(s);
+
+/** URL `status` must match allowed values; unknown strings fall back to `all`. */
+const parseStatusParam = (value: string | null): StatusFilter => {
+  const raw = value ?? 'all';
+  return isStatusFilter(raw) ? raw : 'all';
+};
+
+/**
+ * Snapshot URL + sessionStorage once per mount (used for initial React state only).
+ * README: restore stored query only when the URL has no search params at all — if `?status=online`
+ * etc. is present without `q`, do not fall back to sessionStorage or the box shows a stale query.
+ */
+const getInitialState = () => {
+  const params = new URLSearchParams(window.location.search);
+
+  const queryFromUrl = params.get('q');
+  const queryFromStorage = sessionStorage.getItem(STORAGE_KEY);
+  const hasUrlParams = params.toString() !== '';
+
+  return {
+    query: queryFromUrl ?? (hasUrlParams ? '' : (queryFromStorage ?? '')),
+    status: parseStatusParam(params.get('status')),
+    page: Number(params.get('page')) || 1,
+  };
+};
 
 // --- Theme hook ---
 function useTheme() {
@@ -29,68 +59,114 @@ function useTheme() {
 function App() {
   const { dark, toggle } = useTheme();
 
-  // Search state
-  const [query, setQuery] = useState<string>(
-    () => localStorage.getItem(STORAGE_KEY) ?? ''
-  );
-  const [status, setStatus] = useState<'all' | 'online' | 'offline'>('all');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [query, setQuery] = useState<string>(() => getInitialState().query);
+  const [status, setStatus] = useState<'all' | 'online' | 'offline'>(() => getInitialState().status);
+  const [currentPage, setCurrentPage] = useState<number>(() => getInitialState().page);
+  const [sortBy, setSortBy] = useState<keyof Player | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (column: keyof Player) => {
+    if (sortBy === column) {
+      setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(column);
+      setSortDirection('asc');
+    }
+  };
 
   // Async result state
   const [result, setResult] = useState<SearchResult>({ players: [], total: 0 });
-  const [loading, setLoading] = useState(false);
+  /** `true` on first paint so the table never shows an empty state before the mount search runs. */
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const searchAc = useRef<AbortController | null>(null);
+  /** First debounce effect run is skipped so mount `runSearch` is the only initial fetch. */
+  const isMounted = useRef(false);
 
-  // TODO: The search input should NOT fire a request on every keystroke.
-  // Implement debouncing so the API is only called after the user has
-  // stopped typing for ~500ms. You can use a plain useEffect + setTimeout,
-  // or a utility like `use-debounce`.
-  //
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     runSearch();
-  //   }, 500);
-  //   return () => clearTimeout(timer); // cleanup cancels the previous timer
-  // }, [query, status, currentPage]);
+  useEffect(() => () => searchAc.current?.abort(), []);
 
-  const runSearch = async (page = currentPage) => {
+  // Updating the URL when the query, status, or page changes(state)
+  useEffect(() => {
+    const params = new URLSearchParams();
+  
+    if (query) params.set("q", query);
+    if (status !== "all") params.set("status", status);
+    if (currentPage > 1) params.set("page", String(currentPage));
+  
+    const search = params.toString();
+    const newUrl = search
+      ? `${window.location.pathname}?${search}`
+      : window.location.pathname;
+    window.history.replaceState({}, "", newUrl);
+  }, [query, status, currentPage]);
+
+
+  // Debounce query/status — skip first effect so it does not schedule runSearch(1) on top of mount runSearch
+  useEffect(() => {
+    if (!isMounted.current) {
+      isMounted.current = true;
+      return;
+    }
+    const timer = setTimeout(() => {
+      void runSearch(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [query, status]);
+
+  const runSearch = async (page: number = currentPage, overrideQuery?: string) => {
+    const effectiveQuery = overrideQuery ?? query;
+    searchAc.current?.abort();
+    const ac = new AbortController();
+    searchAc.current = ac;
+
     setLoading(true);
     setError(null);
     try {
       const data = await searchPlayers({
-        query,
+        query: effectiveQuery,
         page,
         pageSize: PLAYERS_PER_PAGE,
         status,
+        signal: ac.signal,
       });
+      if (ac.signal.aborted) return;
+
+      const totalPages = Math.max(1, Math.ceil(data.total / PLAYERS_PER_PAGE));
+      const safePage = Math.min(Math.max(page, 1), totalPages);
+      if (safePage !== page) {
+        setCurrentPage(safePage);
+        return runSearch(safePage, effectiveQuery);
+      }
       setResult(data);
-      localStorage.setItem(STORAGE_KEY, query);
+      sessionStorage.setItem(STORAGE_KEY, effectiveQuery);
     } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {
-      setLoading(false);
+      if (!ac.signal.aborted) setLoading(false);
     }
   };
-
   // Run search on mount with the restored query
   useEffect(() => {
-    runSearch(1);
+    runSearch(currentPage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setCurrentPage(1);
-    // TODO: With debounce wired up via useEffect this explicit call may not
-    // be needed, but keeping a "Go" button that calls runSearch() directly
-    // is good UX for users who want instant results.
-    runSearch(1);
+  };
+
+  // Run search immediately (for pressing the Go button)
+  const handleImmediateSearch = (searchQuery: string) => {
+    setQuery(searchQuery);
+    setCurrentPage(1);
+    void runSearch(1, searchQuery);
   };
 
   const handleStatusChange = (newStatus: 'all' | 'online' | 'offline') => {
     setStatus(newStatus);
     setCurrentPage(1);
-    // TODO: trigger search with updated status
   };
 
   const handleNext = () => {
@@ -106,6 +182,23 @@ function App() {
   };
 
   const totalPages = Math.max(1, Math.ceil(result.total / PLAYERS_PER_PAGE));
+
+  const sortedPlayers = [...result.players];
+
+  if (sortBy) {
+    sortedPlayers.sort((a, b) => {
+      const aVal = a[sortBy];
+      const bVal = b[sortBy];
+  
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+  
+      return sortDirection === 'asc'
+        ? String(aVal).localeCompare(String(bVal))
+        : String(bVal).localeCompare(String(aVal));
+    });
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -124,29 +217,44 @@ function App() {
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-4">
 
-        {/* TODO: Replace with <SearchBar> and a status filter (All / Online / Offline) */}
-        <div className="p-4 border border-dashed border-border rounded text-muted-foreground text-sm space-y-1">
-          <p>TODO: &lt;SearchBar onSearch={'{handleSearch}'} initialValue={'{query}'} /&gt;</p>
-          <p>TODO: Status filter — &lt;select&gt; or &lt;Tabs&gt; that calls handleStatusChange()</p>
-        </div>
+        <SearchBar 
+        onSearch={handleSearch}
+        onSubmit={handleImmediateSearch}
+        initialValue={query} 
+        />
 
-        {/* TODO: Replace with <PlayerTable players={result.players} /> */}
-        {/* Also handle the loading and error states below */}
-        {error && (
+        <StatusFilter value={status} onChange={handleStatusChange} />
+
+        {error ? (
           <div className="p-4 border border-destructive/40 bg-destructive/10 rounded text-destructive text-sm">
-            {error} <button className="underline ml-2" onClick={() => runSearch()}>Retry</button>
+            {error}
+            <button
+              type="button"
+              className="underline ml-2"
+              onClick={() => void runSearch(currentPage)}
+            >
+              Retry
+            </button>
           </div>
+        ) : (
+          <PlayerTable
+            players={sortedPlayers}
+            loading={loading}
+            onSort={handleSort}
+            sortBy={sortBy}
+            sortDirection={sortDirection}
+          />
         )}
-        <div className="p-4 border border-dashed border-border rounded text-muted-foreground text-sm space-y-1">
-          <p>TODO: &lt;PlayerTable players={'{result.players}'} loading={'{loading}'} /&gt;</p>
-          <p>Hint: show a loading skeleton or spinner when loading=true</p>
-          <p>Currently: {loading ? 'loading…' : `${result.total} results`}</p>
-        </div>
 
-        {/* TODO: Replace with <Pagination> */}
-        <div className="p-4 border border-dashed border-border rounded text-muted-foreground text-sm">
-          <p>TODO: &lt;Pagination currentPage={'{currentPage}'} totalPages={'{totalPages}'} totalResults={'{result.total}'} pageSize={'{PLAYERS_PER_PAGE}'} onNext={'{handleNext}'} onPrev={'{handlePrev}'} /&gt;</p>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalResults={result.total}
+          pageSize={PLAYERS_PER_PAGE}
+          onNext={handleNext}
+          onPrev={handlePrev}
+        />
+
       </main>
     </div>
   );

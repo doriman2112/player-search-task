@@ -6,7 +6,23 @@ export interface SearchParams {
   page: number;
   pageSize: number;
   status?: 'all' | 'online' | 'offline';
+  signal?: AbortSignal;
 }
+
+/** Like `setTimeout`, but rejects with `AbortError` if `signal` aborts. */
+const delay = (ms: number, signal?: AbortSignal) =>
+  new Promise<void>((ok, fail) => {
+    if (signal?.aborted) return void fail(new DOMException('Aborted', 'AbortError'));
+    const onAbort = () => {
+      clearTimeout(id);
+      fail(new DOMException('Aborted', 'AbortError'));
+    };
+    const id = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort);
+      ok();
+    }, ms);
+    signal?.addEventListener('abort', onAbort, { once: true });
+  });
 
 export interface SearchResult {
   players: Player[];
@@ -26,7 +42,8 @@ export interface SearchResult {
  *     .then(res => { if (!res.ok) throw new Error(res.statusText); return res.json(); })
  */
 export async function searchPlayers(params: SearchParams): Promise<SearchResult> {
-  await new Promise((res) => setTimeout(res, 600));
+  await delay(600, params.signal);
+  params.signal?.throwIfAborted();
 
   // Simulate occasional server errors (~10% of calls)
   if (Math.random() < 0.1) {
