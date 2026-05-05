@@ -1,3 +1,5 @@
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+
 type Status = "all" | "online" | "offline";
 
 interface StatusFilterProps {
@@ -5,20 +7,25 @@ interface StatusFilterProps {
   onChange: (value: Status) => void;
 }
 
+const isStatus = (v: string | undefined): v is Status =>
+  v === "all" || v === "online" || v === "offline";
+
 export const StatusFilter = ({ value, onChange }: StatusFilterProps) => {
   return (
-    <div>
-      <button onClick={() => onChange("all")} disabled={value === "all"}>
-        All
-      </button>
-
-      <button onClick={() => onChange("online")} disabled={value === "online"}>
-        Online
-      </button>
-
-      <button onClick={() => onChange("offline")} disabled={value === "offline"}>
-        Offline
-      </button>
-    </div>
+    <ToggleGroup
+      variant="outline"
+      spacing={0}
+      multiple={false}
+      value={[value]}
+      onValueChange={(next) => {
+        const selected = next[0];
+        if (isStatus(selected)) onChange(selected);
+      }}
+      aria-label="Filter by online status"
+    >
+      <ToggleGroupItem value="all">All</ToggleGroupItem>
+      <ToggleGroupItem value="online">Online</ToggleGroupItem>
+      <ToggleGroupItem value="offline">Offline</ToggleGroupItem>
+    </ToggleGroup>
   );
 };
