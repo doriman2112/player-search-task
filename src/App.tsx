@@ -10,15 +10,20 @@ import { Pagination } from '@/components/Pagination';
 const PLAYERS_PER_PAGE = 10;
 const STORAGE_KEY = 'player-search-query';
 
-/** Snapshot URL + sessionStorage once per mount (used for initial React state only). */
+/**
+ * Snapshot URL + sessionStorage once per mount (used for initial React state only).
+ * README: restore stored query only when the URL has no search params at all — if `?status=online`
+ * etc. is present without `q`, do not fall back to sessionStorage or the box shows a stale query.
+ */
 const getInitialState = () => {
   const params = new URLSearchParams(window.location.search);
 
   const queryFromUrl = params.get('q');
   const queryFromStorage = sessionStorage.getItem(STORAGE_KEY);
+  const hasUrlParams = params.toString() !== '';
 
   return {
-    query: queryFromUrl ?? queryFromStorage ?? '',
+    query: queryFromUrl ?? (hasUrlParams ? '' : (queryFromStorage ?? '')),
     status: (params.get('status') as 'all' | 'online' | 'offline') || 'all',
     page: Number(params.get('page')) || 1,
   };
