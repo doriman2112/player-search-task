@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Sun, Moon } from 'lucide-react';
 import { searchPlayers, SearchResult } from '@/api/searchPlayers';
 import type { Player } from '@/types/player';
@@ -42,10 +42,9 @@ function useTheme() {
 function App() {
   const { dark, toggle } = useTheme();
 
-  const initial = useMemo(() => getInitialState(), []);
-  const [query, setQuery] = useState<string>(initial.query);
-  const [status, setStatus] = useState<'all' | 'online' | 'offline'>(initial.status);
-  const [currentPage, setCurrentPage] = useState<number>(initial.page);
+  const [query, setQuery] = useState<string>(() => getInitialState().query);
+  const [status, setStatus] = useState<'all' | 'online' | 'offline'>(() => getInitialState().status);
+  const [currentPage, setCurrentPage] = useState<number>(() => getInitialState().page);
   const [sortBy, setSortBy] = useState<keyof Player | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
